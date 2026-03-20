@@ -186,7 +186,14 @@
         // 🚀 Vercel 배포 시, 아래 null 값을 지우고 본인의 Firebase 설정을 넣으세요!
         // 예시: const myFirebaseConfig = { apiKey: "...", projectId: "..." };
         // ==============================================================
-        const myFirebaseConfig = null; 
+        const firebaseConfig = {
+  apiKey: "AIzaSyDjPIRXqzv9oR8RUaEZ2lfUM6oPM6Z94Fg",
+  authDomain: "bookbook-ee256.firebaseapp.com",
+  projectId: "bookbook-ee256",
+  storageBucket: "bookbook-ee256.firebasestorage.app",
+  messagingSenderId: "666340383957",
+  appId: "1:666340383957:web:4cbc1b4fa1793b85c1165c"
+}; 
 
         let db, docRef;
         let isCloudSyncing = false;
@@ -229,7 +236,8 @@
 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        docRef = doc(db, 'artifacts', appId, 'public', 'data', 'gyodokState');
+                        // 수정됨: 컬렉션 참조가 아닌 구체적인 문서 참조를 위해 마지막에 'main'이라는 문서 ID를 추가하여 짝수 세그먼트(6개)를 맞추었습니다.
+                        docRef = doc(db, 'artifacts', appId, 'public', 'data', 'gyodokState', 'main');
                         
                         // 데이터 실시간 감지
                         onSnapshot(docRef, (snapshot) => {
