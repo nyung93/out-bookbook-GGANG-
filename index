@@ -1,281 +1,276 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { BookOpen, RefreshCw, Users, Settings } from 'lucide-react';
-
-// --- 초기 데이터 타입 및 상태 ---
-export default function KyodokApp() {
-  const [isMounted, setIsMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState('status'); // status, spin, manage
-  
-  // 회차 및 상태 데이터
-  const [session, setSession] = useState({
-    round: 1,
-    startDate: '',
-    endDate: '',
-    spinsLeft: 3,
-  });
-
-  const [members, setMembers] = useState([]);
-  
-  // 돌림판 애니메이션 상태
-  const [rotation, setRotation] = useState(0);
-  const [isSpinning, setIsSpinning] = useState(false);
-
-  // Vercel(Next.js) Hydration 에러 방지 및 로컬스토리지 연동
-  useEffect(() => {
-    setIsMounted(true);
-    const savedData = localStorage.getItem('kyodok-data');
-    if (savedData) {
-      const parsed = JSON.parse(savedData);
-      setSession(parsed.session);
-      setMembers(parsed.members);
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>돌려돌려 교독깡!</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 돌림판 애니메이션용 CSS */
+    .spin-transition {
+      transition: transform 3s cubic-bezier(0.25, 1, 0.5, 1);
     }
-  }, []);
+    /* 탭 메뉴 숨김 처리용 */
+    .hidden { display: none; }
+  </style>
+</head>
+<body class="bg-slate-100 flex justify-center font-sans text-gray-800 min-h-screen">
 
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('kyodok-data', JSON.stringify({ session, members }));
-    }
-  }, [session, members, isMounted]);
-
-  // 1. 멤버 추가 및 이미지(캐릭터) 텍스트/이모지 등록 (간소화)
-  const addMember = () => {
-    const name = prompt('이름을 입력하세요:');
-    if (!name) return;
-    const character = prompt('캐릭터 이모지나 프로필 URL을 입력하세요 (예: 🦊):') || '👤';
+  <div class="w-full max-w-md bg-white shadow-2xl flex flex-col relative overflow-hidden h-screen">
     
-    setMembers([...members, {
-      id: Date.now(),
-      name,
-      character,
-      books: [],
-      currentBook: '',
-      progress: 0
-    }]);
-  };
-
-  // 2. 읽고 싶은 책 등록 (최대 4개)
-  const addBook = (memberId) => {
-    const member = members.find(m => m.id === memberId);
-    if (member.books.length >= 4) {
-      alert('책은 최대 4개까지만 등록 가능합니다!');
-      return;
-    }
-    const bookTitle = prompt('읽고 싶은 책 제목을 입력하세요:');
-    if (!bookTitle) return;
-
-    setMembers(members.map(m => 
-      m.id === memberId ? { ...m, books: [...m.books, bookTitle] } : m
-    ));
-  };
-
-  // 3. 돌림판 로직 (회차당 3번 제한)
-  const startSpin = () => {
-    if (session.spinsLeft <= 0) {
-      alert('이번 회차의 돌림판 기회를 모두 사용했습니다!');
-      return;
-    }
-    if (isSpinning) return;
-
-    setIsSpinning(true);
-    const spinDegrees = Math.floor(Math.random() * 360) + 1440; // 최소 4바퀴 회전
-    setRotation(rotation + spinDegrees);
-    
-    // 돌림판 결과 (랜덤으로 책 할당 시뮬레이션)
-    setTimeout(() => {
-      setIsSpinning(false);
-      setSession({ ...session, spinsLeft: session.spinsLeft - 1 });
-      
-      // 데모 로직: 멤버들의 currentBook을 랜덤하게 변경
-      const updatedMembers = members.map(m => {
-        if (m.books.length > 0) {
-          const randomBook = m.books[Math.floor(Math.random() * m.books.length)];
-          return { ...m, currentBook: randomBook };
-        }
-        return m;
-      });
-      setMembers(updatedMembers);
-      alert('돌림판 결과가 적용되었습니다!');
-    }, 3000);
-  };
-
-  // 5. 진행도 업데이트
-  const updateProgress = (memberId, value) => {
-    setMembers(members.map(m => 
-      m.id === memberId ? { ...m, progress: Number(value) } : m
-    ));
-  };
-
-  if (!isMounted) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">로딩중...</div>;
-
-  return (
-    <div className="min-h-screen bg-slate-100 flex justify-center font-sans text-gray-800">
-      {/* 모바일 화면 컨테이너 */}
-      <div className="w-full max-w-md bg-white shadow-2xl flex flex-col relative overflow-hidden">
-        
-        {/* 헤더 및 타이틀 */}
-        <header className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-b-3xl shadow-md z-10">
-          <h1 className="text-3xl font-black italic tracking-tight text-center drop-shadow-lg">
-            🎡 돌려돌려 교독깡!
-          </h1>
-          <p className="text-center text-sm mt-2 opacity-90 font-medium">제 {session.round}회차 교환독서</p>
-          
-          {/* 4. 교환독서 기간 표시 */}
-          {session.startDate && session.endDate && (
-            <div className="mt-3 bg-white/20 rounded-lg p-2 text-xs text-center backdrop-blur-sm">
-              🗓️ {session.startDate} ~ {session.endDate}
-            </div>
-          )}
-        </header>
-
-        {/* 메인 콘텐츠 */}
-        <main className="flex-1 p-5 overflow-y-auto pb-24">
-          
-          {/* 현황 탭 */}
-          {activeTab === 'status' && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold flex items-center gap-2"><BookOpen className="text-indigo-600" /> 독서 현황판</h2>
-              {members.length === 0 ? (
-                <p className="text-gray-400 text-center py-10">관리 탭에서 멤버를 추가해주세요.</p>
-              ) : (
-                members.map(member => (
-                  <div key={member.id} className="bg-white border-2 border-slate-100 rounded-2xl p-4 shadow-sm relative overflow-hidden">
-                    <div className="flex justify-between items-end mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="text-3xl bg-slate-100 w-12 h-12 rounded-full flex items-center justify-center">{member.character}</div>
-                        <div>
-                          <p className="font-bold text-lg">{member.name}</p>
-                          {/* 6. 지정된 책 및 읽는 사람 라벨 */}
-                          {member.currentBook ? (
-                            <span className="inline-block bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded-md font-semibold mt-1">
-                              📖 {member.currentBook}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-gray-400">배정된 책 없음</span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-sm font-bold text-indigo-600">{member.progress}%</span>
-                    </div>
-                    
-                    {/* 5. 상태 표시 바 및 컨트롤러 */}
-                    <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden mb-2">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${member.progress}%` }}
-                        className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full"
-                      />
-                    </div>
-                    <input 
-                      type="range" 
-                      min="0" max="100" 
-                      value={member.progress}
-                      onChange={(e) => updateProgress(member.id, e.target.value)}
-                      className="w-full accent-indigo-600"
-                    />
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* 돌림판 탭 */}
-          {activeTab === 'spin' && (
-            <div className="flex flex-col items-center py-8">
-              <h2 className="text-xl font-bold mb-2">운명의 돌림판</h2>
-              <p className="text-sm text-gray-500 mb-8">남은 기회: <span className="text-indigo-600 font-bold">{session.spinsLeft}번</span></p>
-              
-              <div className="relative w-72 h-72">
-                {/* 화살표 핀 */}
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[15px] border-r-[15px] border-t-[30px] border-l-transparent border-r-transparent border-t-red-500 z-20 drop-shadow-md" />
-                
-                {/* 돌림판 그래픽 */}
-                <motion.div
-                  animate={{ rotate: rotation }}
-                  transition={{ duration: 3, ease: "circOut" }}
-                  className="w-full h-full rounded-full border-8 border-indigo-200 shadow-inner flex items-center justify-center overflow-hidden"
-                  style={{ background: 'conic-gradient(#818cf8 0deg 90deg, #c7d2fe 90deg 180deg, #6366f1 180deg 270deg, #a5b4fc 270deg 360deg)' }}
-                >
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg z-10 font-bold text-indigo-600">
-                    SPIN
-                  </div>
-                </motion.div>
-              </div>
-
-              <button 
-                onClick={startSpin}
-                disabled={isSpinning || session.spinsLeft === 0}
-                className="mt-12 w-full py-4 bg-indigo-600 disabled:bg-slate-400 text-white rounded-2xl font-black text-lg shadow-xl active:scale-95 transition-transform"
-              >
-                {isSpinning ? '두구두구두구...' : '돌리기 시작!'}
-              </button>
-            </div>
-          )}
-
-          {/* 관리 탭 */}
-          {activeTab === 'manage' && (
-            <div className="space-y-6">
-              <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
-                <h3 className="font-bold flex items-center gap-2 mb-3"><Settings size={18} /> 회차 설정</h3>
-                <div className="flex gap-2 text-sm">
-                  <input type="date" className="flex-1 p-2 rounded-lg border" value={session.startDate} onChange={e => setSession({...session, startDate: e.target.value})} />
-                  <span className="self-center">~</span>
-                  <input type="date" className="flex-1 p-2 rounded-lg border" value={session.endDate} onChange={e => setSession({...session, endDate: e.target.value})} />
-                </div>
-                <button onClick={() => setSession({...session, spinsLeft: 3, round: session.round + 1})} className="mt-3 w-full py-2 bg-indigo-200 text-indigo-800 font-bold rounded-lg">
-                  새로운 회차 시작 (돌림판 초기화)
-                </button>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-bold flex items-center gap-2"><Users size={18} /> 멤버 및 도서 관리</h3>
-                  <button onClick={addMember} className="bg-indigo-600 text-white text-sm px-3 py-1 rounded-full font-bold">+ 멤버 추가</button>
-                </div>
-                
-                <div className="space-y-3">
-                  {members.map(member => (
-                    <div key={member.id} className="p-3 border rounded-xl bg-white">
-                      <div className="flex justify-between items-center border-b pb-2 mb-2">
-                        <span className="font-bold">{member.character} {member.name}</span>
-                        <button onClick={() => addBook(member.id)} className="text-xs bg-slate-100 px-2 py-1 rounded-md text-slate-600 font-bold">
-                          + 책 추가 ({member.books.length}/4)
-                        </button>
-                      </div>
-                      <ul className="text-sm text-slate-600 space-y-1 pl-2">
-                        {member.books.length === 0 && <li className="text-slate-400">등록된 책이 없습니다.</li>}
-                        {member.books.map((b, i) => <li key={i}>- {b}</li>)}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </main>
-
-        {/* 하단 탭 네비게이션 */}
-        <nav className="absolute bottom-0 w-full bg-white border-t rounded-t-2xl flex pb-safe shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-20">
-          {[
-            { id: 'status', icon: <BookOpen size={20} />, label: '현황판' },
-            { id: 'spin', icon: <RefreshCw size={20} />, label: '돌림판' },
-            { id: 'manage', icon: <Settings size={20} />, label: '설정/관리' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex flex-col items-center justify-center py-4 gap-1 transition-colors ${
-                activeTab === tab.id ? 'text-indigo-600 font-bold' : 'text-gray-400 font-medium'
-              }`}
-            >
-              {tab.icon}
-              <span className="text-xs">{tab.label}</span>
-            </button>
-          ))}
-        </nav>
+    <header class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-b-3xl shadow-md z-10">
+      <h1 class="text-3xl font-black italic tracking-tight text-center drop-shadow-lg">🎡 돌려돌려 교독깡!</h1>
+      <p id="round-display" class="text-center text-sm mt-2 opacity-90 font-medium">제 1회차 교환독서</p>
+      <div id="date-display" class="mt-3 bg-white/20 rounded-lg p-2 text-xs text-center backdrop-blur-sm hidden">
+        🗓️ <span id="start-date-text"></span> ~ <span id="end-date-text"></span>
       </div>
-    </div>
-  );
-}
+    </header>
+
+    <main class="flex-1 p-5 overflow-y-auto pb-24">
+      
+      <section id="tab-status" class="space-y-6">
+        <h2 class="text-xl font-bold">📖 독서 현황판</h2>
+        <div id="members-list" class="space-y-4">
+          </div>
+      </section>
+
+      <section id="tab-spin" class="hidden flex flex-col items-center py-8">
+        <h2 class="text-xl font-bold mb-2">운명의 돌림판</h2>
+        <p class="text-sm text-gray-500 mb-8">남은 기회: <span id="spins-left" class="text-indigo-600 font-bold">3번</span></p>
+        
+        <div class="relative w-72 h-72">
+          <div class="absolute -top-4 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[15px] border-r-[15px] border-t-[30px] border-l-transparent border-r-transparent border-t-red-500 z-20 drop-shadow-md"></div>
+          <div id="roulette-wheel" class="w-full h-full rounded-full border-8 border-indigo-200 shadow-inner flex items-center justify-center overflow-hidden spin-transition" style="background: conic-gradient(#818cf8 0deg 90deg, #c7d2fe 90deg 180deg, #6366f1 180deg 270deg, #a5b4fc 270deg 360deg);">
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg z-10 font-bold text-indigo-600">SPIN</div>
+          </div>
+        </div>
+
+        <button id="spin-btn" onclick="startSpin()" class="mt-12 w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-lg shadow-xl active:scale-95 transition-transform">
+          돌리기 시작!
+        </button>
+      </section>
+
+      <section id="tab-manage" class="hidden space-y-6">
+        <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+          <h3 class="font-bold mb-3">⚙️ 회차 설정</h3>
+          <div class="flex gap-2 text-sm">
+            <input type="date" id="input-start-date" onchange="updateSettings()" class="flex-1 p-2 rounded-lg border">
+            <span class="self-center">~</span>
+            <input type="date" id="input-end-date" onchange="updateSettings()" class="flex-1 p-2 rounded-lg border">
+          </div>
+          <button onclick="newRound()" class="mt-3 w-full py-2 bg-indigo-200 text-indigo-800 font-bold rounded-lg">새로운 회차 시작 (초기화)</button>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold">👥 멤버 및 도서 관리</h3>
+            <button onclick="addMember()" class="bg-indigo-600 text-white text-sm px-3 py-1 rounded-full font-bold">+ 멤버 추가</button>
+          </div>
+          <div id="manage-members-list" class="space-y-3">
+            </div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="absolute bottom-0 w-full bg-white border-t rounded-t-2xl flex shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-20 pb-4 pt-2">
+      <button onclick="switchTab('status')" id="nav-status" class="flex-1 flex flex-col items-center py-2 text-indigo-600 font-bold">
+        <span class="text-xl mb-1">📖</span><span class="text-xs">현황판</span>
+      </button>
+      <button onclick="switchTab('spin')" id="nav-spin" class="flex-1 flex flex-col items-center py-2 text-gray-400 font-medium">
+        <span class="text-xl mb-1">🎡</span><span class="text-xs">돌림판</span>
+      </button>
+      <button onclick="switchTab('manage')" id="nav-manage" class="flex-1 flex flex-col items-center py-2 text-gray-400 font-medium">
+        <span class="text-xl mb-1">⚙️</span><span class="text-xs">관리</span>
+      </button>
+    </nav>
+  </div>
+
+  <script>
+    // --- 데이터 초기화 및 로컬 스토리지 연동 ---
+    let appData = {
+      round: 1,
+      startDate: '',
+      endDate: '',
+      spinsLeft: 3,
+      members: []
+    };
+
+    let currentRotation = 0;
+    let isSpinning = false;
+
+    // 데이터 불러오기
+    function loadData() {
+      const saved = localStorage.getItem('kyodok-data');
+      if (saved) {
+        appData = JSON.parse(saved);
+      }
+      renderUI();
+    }
+
+    // 데이터 저장하기
+    function saveData() {
+      localStorage.setItem('kyodok-data', JSON.stringify(appData));
+      renderUI();
+    }
+
+    // --- 화면 렌더링 함수 ---
+    function renderUI() {
+      // 헤더 업데이트
+      document.getElementById('round-display').innerText = `제 ${appData.round}회차 교환독서`;
+      if (appData.startDate && appData.endDate) {
+        document.getElementById('date-display').classList.remove('hidden');
+        document.getElementById('start-date-text').innerText = appData.startDate;
+        document.getElementById('end-date-text').innerText = appData.endDate;
+      }
+
+      // 관리 탭 날짜 업데이트
+      document.getElementById('input-start-date').value = appData.startDate;
+      document.getElementById('input-end-date').value = appData.endDate;
+
+      // 돌림판 남은 횟수 업데이트
+      document.getElementById('spins-left').innerText = `${appData.spinsLeft}번`;
+      
+      const spinBtn = document.getElementById('spin-btn');
+      if (appData.spinsLeft <= 0) {
+        spinBtn.innerText = "이번 회차 기회 소진";
+        spinBtn.classList.replace('bg-indigo-600', 'bg-gray-400');
+        spinBtn.disabled = true;
+      } else {
+        spinBtn.innerText = "돌리기 시작!";
+        spinBtn.classList.replace('bg-gray-400', 'bg-indigo-600');
+        spinBtn.disabled = false;
+      }
+
+      // 1. 현황판 리스트 그리기
+      const statusList = document.getElementById('members-list');
+      if (appData.members.length === 0) {
+        statusList.innerHTML = '<p class="text-gray-400 text-center py-10">관리 탭에서 멤버를 추가해주세요.</p>';
+      } else {
+        statusList.innerHTML = appData.members.map(m => `
+          <div class="bg-white border-2 border-slate-100 rounded-2xl p-4 shadow-sm relative">
+            <div class="flex justify-between items-end mb-3">
+              <div class="flex items-center gap-3">
+                <div class="text-3xl bg-slate-100 w-12 h-12 rounded-full flex items-center justify-center">${m.character}</div>
+                <div>
+                  <p class="font-bold text-lg">${m.name}</p>
+                  ${m.currentBook ? `<span class="inline-block bg-indigo-100 text-indigo-700 text-xs px-2 py-1 rounded-md font-semibold mt-1">📖 ${m.currentBook}</span>` : '<span class="text-xs text-gray-400">배정된 책 없음</span>'}
+                </div>
+              </div>
+              <span class="text-sm font-bold text-indigo-600">${m.progress}%</span>
+            </div>
+            <div class="w-full bg-slate-100 h-4 rounded-full overflow-hidden mb-2">
+              <div class="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full" style="width: ${m.progress}%"></div>
+            </div>
+            <input type="range" min="0" max="100" value="${m.progress}" onchange="updateProgress(${m.id}, this.value)" class="w-full accent-indigo-600">
+          </div>
+        `).join('');
+      }
+
+      // 2. 관리 탭 리스트 그리기
+      const manageList = document.getElementById('manage-members-list');
+      manageList.innerHTML = appData.members.map(m => `
+        <div class="p-3 border rounded-xl bg-white shadow-sm">
+          <div class="flex justify-between items-center border-b pb-2 mb-2">
+            <span class="font-bold">${m.character} ${m.name}</span>
+            <button onclick="addBook(${m.id})" class="text-xs bg-slate-100 px-2 py-1 rounded-md text-slate-600 font-bold hover:bg-slate-200">+ 책 추가 (${m.books.length}/4)</button>
+          </div>
+          <ul class="text-sm text-slate-600 space-y-1 pl-2">
+            ${m.books.length === 0 ? '<li class="text-slate-400">등록된 책이 없습니다.</li>' : m.books.map((b, i) => `<li>- ${b}</li>`).join('')}
+          </ul>
+        </div>
+      `).join('');
+    }
+
+    // --- 기능 로직 ---
+    function switchTab(tabName) {
+      ['status', 'spin', 'manage'].forEach(tab => {
+        document.getElementById(`tab-${tab}`).classList.add('hidden');
+        document.getElementById(`nav-${tab}`).classList.replace('text-indigo-600', 'text-gray-400');
+        document.getElementById(`nav-${tab}`).classList.remove('font-bold');
+      });
+      document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+      document.getElementById(`nav-${tabName}`).classList.replace('text-gray-400', 'text-indigo-600');
+      document.getElementById(`nav-${tabName}`).classList.add('font-bold');
+    }
+
+    function addMember() {
+      const name = prompt('멤버 이름을 입력하세요:');
+      if (!name) return;
+      const character = prompt('캐릭터 이모지를 입력하세요 (예: 🦊, 🐰):') || '👤';
+      
+      appData.members.push({ id: Date.now(), name, character, books: [], currentBook: '', progress: 0 });
+      saveData();
+    }
+
+    function addBook(memberId) {
+      const member = appData.members.find(m => m.id === memberId);
+      if (member.books.length >= 4) {
+        alert('책은 최대 4개까지만 등록 가능합니다!');
+        return;
+      }
+      const bookTitle = prompt('읽고 싶은 책 제목을 입력하세요:');
+      if (!bookTitle) return;
+
+      member.books.push(bookTitle);
+      saveData();
+    }
+
+    function updateProgress(memberId, value) {
+      const member = appData.members.find(m => m.id === memberId);
+      if (member) {
+        member.progress = value;
+        saveData();
+      }
+    }
+
+    function updateSettings() {
+      appData.startDate = document.getElementById('input-start-date').value;
+      appData.endDate = document.getElementById('input-end-date').value;
+      saveData();
+    }
+
+    function newRound() {
+      if(confirm('새로운 회차를 시작하시겠습니까? 돌림판 기회가 3번으로 초기화됩니다.')) {
+        appData.round += 1;
+        appData.spinsLeft = 3;
+        saveData();
+      }
+    }
+
+    function startSpin() {
+      if (isSpinning || appData.spinsLeft <= 0) return;
+      
+      const wheel = document.getElementById('roulette-wheel');
+      const btn = document.getElementById('spin-btn');
+      
+      isSpinning = true;
+      btn.innerText = "두구두구두구...";
+      
+      // 랜덤 회전 (최소 4바퀴 + 랜덤 각도)
+      const spinDegrees = Math.floor(Math.random() * 360) + 1440; 
+      currentRotation += spinDegrees;
+      
+      wheel.style.transform = `rotate(${currentRotation}deg)`;
+
+      setTimeout(() => {
+        isSpinning = false;
+        appData.spinsLeft -= 1;
+        
+        // 랜덤으로 책 배정
+        appData.members.forEach(m => {
+          if (m.books.length > 0) {
+            const randomIdx = Math.floor(Math.random() * m.books.length);
+            m.currentBook = m.books[randomIdx];
+          }
+        });
+        
+        saveData();
+        alert('돌림판 결과가 적용되었습니다! 현황판에서 확인하세요.');
+      }, 3000); // 3초 애니메이션 대기
+    }
+
+    // 초기 실행
+    window.onload = loadData;
+  </script>
+</body>
+</html>
