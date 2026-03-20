@@ -70,7 +70,10 @@
                     <button onclick="addMember()" class="bg-pink-500 text-white px-6 rounded-2xl font-black shadow-lg shadow-pink-200 active:scale-95 transition-all">등록</button>
                 </div>
             </div>
-            <div id="member-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+            <div>
+                <h3 class="text-sm font-bold text-gray-500 mb-3 ml-2 uppercase tracking-wider">참여 중인 멤버 (<span id="member-count">0</span>)</h3>
+                <div id="member-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+            </div>
         </section>
 
         <!-- 2. 책 등록 탭 -->
@@ -114,7 +117,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ==========================================
@@ -151,44 +154,50 @@
                 const auth = getAuth(app);
                 db = getFirestore(app);
                 
-                // 인증 상태 확인을 먼저 수행하여 권한 타이밍 오류 방지
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        // Vercel 등 개인 파이어베이스용 심플한 저장 경로 적용
-                        docRef = doc(db, 'gyodokStore', 'mainData');
-
-                        onSnapshot(docRef, (snap) => {
-                            if (snap.exists()) {
-                                isCloudSyncing = true;
-                                const data = snap.data();
-                                window.state.members = data.members || [];
-                                window.state.rounds = data.rounds || window.state.rounds;
-                                window.state.currentRoundId = data.currentRoundId || 1;
-                                refreshAll();
-                                isCloudSyncing = false;
-                                
-                                statusLabel.innerText = "☁️ 클라우드 연결됨 ✅";
-                                statusLabel.className = "mb-6 text-center py-1.5 rounded-full text-[11px] font-black uppercase bg-green-100 text-green-600 max-w-[240px] mx-auto border border-green-200 shadow-sm";
-                            } else {
-                                save(true);
-                                refreshAll();
-                            }
-                        }, (err) => {
-                            console.error("Firebase Error:", err);
-                            statusLabel.innerText = "❌ 권한 오류 (클릭해서 해결법 보기)";
-                            statusLabel.className = "mb-6 text-center py-1.5 rounded-full text-[11px] font-black uppercase bg-red-100 text-red-600 max-w-[240px] mx-auto border border-red-200 shadow-sm cursor-pointer animate-pulse";
-                            // 권한 오류 시 클릭하면 해결법 안내
-                            statusLabel.onclick = () => alert("파이어베이스 권한(Rules) 오류입니다!\n\nFirebase 콘솔 -> Firestore Database -> [Rules] 탭으로 이동해서 아래처럼 코드를 수정하고 [게시]를 눌러주세요.\n\nmatch /{document=**} {\n  allow read, write: if true;\n}");
-                        });
-                    } else {
-                        try {
-                            await signInAnonymously(auth);
-                        } catch(authErr) {
-                            console.error("Auth Error:", authErr);
-                            statusLabel.innerText = "❌ 익명 로그인 오류 (Auth 설정 필요)";
-                            statusLabel.className = "mb-6 text-center py-1.5 rounded-full text-[11px] font-black uppercase bg-red-100 text-red-600 max-w-[240px] mx-auto border border-red-200 shadow-sm";
-                        }
+                // 1. 강제 익명 로그인 시도 (Vercel 도메인 차단 에러 캐치)
+                try {
+                    await signInAnonymously(auth);
+                } catch(authErr) {
+                    console.error("Auth Error:", authErr);
+                    if (authErr.code === 'auth/unauthorized-domain') {
+                        statusLabel.innerText = "❌ Vercel 도메인을 파이어베이스에 추가해주세요!";
+                        statusLabel.className = "mb-6 text-center py-1.5 rounded-full text-[11px] font-black uppercase bg-red-100 text-red-600 max-w-[280px] mx-auto border border-red-200 shadow-sm";
+                        return; // 에러 시 여기서 멈춤
                     }
+                }
+
+                // 2. 데이터베이스 연결
+                docRef = doc(db, 'gyodokStore', 'mainData');
+
+                onSnapshot(docRef, (snap) => {
+                    try {
+                        if (snap.exists()) {
+                            const data = snap.data();
+                            // 과거의 잘못된 데이터로 인한 충돌을 막기 위한 강력한 검증
+                            window.state.members = Array.isArray(data.members) ? data.members : [];
+                            window.state.rounds = (Array.isArray(data.rounds) && data.rounds.length > 0) ? data.rounds : [{ id: 1, startDate: '', endDate: '', proposals: {}, assignments: {}, spinCount: 0, selectedBooks: [] }];
+                            window.state.currentRoundId = data.currentRoundId || 1;
+                            
+                            isCloudSyncing = true;
+                            refreshAll();
+                            isCloudSyncing = false;
+                            
+                            statusLabel.innerText = "☁️ 클라우드 연결됨 ✅";
+                            statusLabel.className = "mb-6 text-center py-1.5 rounded-full text-[11px] font-black uppercase bg-green-100 text-green-600 max-w-[240px] mx-auto border border-green-200 shadow-sm";
+                        } else {
+                            isCloudSyncing = false;
+                            save(true);
+                            refreshAll();
+                        }
+                    } catch (renderErr) {
+                        console.error("데이터 렌더링 오류:", renderErr);
+                        statusLabel.innerText = "🚨 기존 데이터 충돌 (DB 비우기 필요)";
+                        statusLabel.className = "mb-6 text-center py-1.5 rounded-full text-[11px] font-black uppercase bg-orange-100 text-orange-600 max-w-[240px] mx-auto border border-orange-200 shadow-sm";
+                    }
+                }, (err) => {
+                    console.error("Firebase Error:", err);
+                    statusLabel.innerText = "❌ 권한 오류 (Rules 확인)";
+                    statusLabel.className = "mb-6 text-center py-1.5 rounded-full text-[11px] font-black uppercase bg-red-100 text-red-600 max-w-[240px] mx-auto border border-red-200 shadow-sm cursor-pointer";
                 });
             } catch (e) {
                 console.error("Init Error:", e);
