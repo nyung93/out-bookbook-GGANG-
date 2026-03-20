@@ -253,13 +253,24 @@
 
         function ensure() {
             const r = window.state.rounds.find(x => x.id === window.state.currentRoundId) || window.state.rounds[0];
-            if(!r.proposals) r.proposals = {}; if(!r.assignments) r.assignments = {};
+            if(!r.proposals) r.proposals = {}; 
+            if(!r.assignments) r.assignments = {};
             if(!r.spinCounts) r.spinCounts = {};
+            if(!r.selectedBooks) r.selectedBooks = [];
             
             const memberCount = Math.max(1, window.state.members.length);
 
             window.state.members.forEach(m => {
-                if(!r.proposals[m.id]) r.proposals[m.id] = ['', '', '', ''];
+                // 데이터 업그레이드: proposals 배열 요소를 {title, author} 객체로 변환
+                if(!r.proposals[m.id]) {
+                    r.proposals[m.id] = Array.from({length:4}, () => ({title: '', author: ''}));
+                } else {
+                    r.proposals[m.id] = r.proposals[m.id].map(p => {
+                        if (typeof p === 'string') return { title: p, author: '' };
+                        return p || { title: '', author: '' };
+                    });
+                }
+
                 if(r.spinCounts[m.id] === undefined) r.spinCounts[m.id] = 0;
                 
                 // 데이터 구조 업그레이드: 1개의 진행률 객체에서 N개(차수)의 배열로 변환
@@ -327,15 +338,27 @@
             `).join('');
         }
 
+        window.updateBookProposal = (mId, index, field, val) => {
+            const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
+            if (!r.proposals[mId][index]) r.proposals[mId][index] = { title: '', author: '' };
+            r.proposals[mId][index][field] = val;
+            save();
+        }
+
         function renderBooks() {
             const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
             document.getElementById('books-list').innerHTML = window.state.members.map(m => {
-                const p = r.proposals[m.id] || ['', '', '', ''];
+                const p = r.proposals[m.id] || Array.from({length:4}, () => ({title: '', author: ''}));
                 return `
                 <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
                     <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><span class="text-2xl">${m.avatar}</span> ${m.name}</h3>
-                    <div class="space-y-2">
-                        ${p.map((x,i)=>`<input type="text" onchange="window.state.rounds.find(r=>r.id===${r.id}).proposals['${m.id}'][${i}]=this.value;save();" value="${x}" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-3.5 text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all" placeholder="책 제목을 입력하세요">`).join('')}
+                    <div class="space-y-3">
+                        ${p.map((x,i)=>`
+                            <div class="flex gap-2">
+                                <input type="text" onchange="updateBookProposal('${m.id}', ${i}, 'title', this.value)" value="${x.title || ''}" class="flex-[2] bg-gray-50 border border-gray-100 rounded-2xl p-3.5 text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all placeholder-gray-400" placeholder="책 제목">
+                                <input type="text" onchange="updateBookProposal('${m.id}', ${i}, 'author', this.value)" value="${x.author || ''}" class="flex-[1] bg-gray-50 border border-gray-100 rounded-2xl p-3.5 text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all placeholder-gray-400" placeholder="작가명">
+                            </div>
+                        `).join('')}
                     </div>
                 </div>`;
             }).join('');
@@ -364,6 +387,18 @@
             showToast("돌림판 횟수가 초기화되었습니다.");
         }
 
+        // 등록된 객체({title, author})를 "책 제목 (작가명)" 형태의 고유 문자열로 변환하고
+        // 이미 다른 사람(또는 본인)이 뽑은 책은 제외하여 필터링합니다.
+        function getValidBooksForMember(r, mId) {
+            if (!r.proposals[mId]) return [];
+            let books = r.proposals[mId]
+                .filter(x => x && x.title && x.title.trim())
+                .map(x => `${x.title.trim()}${x.author && x.author.trim() ? ' (' + x.author.trim() + ')' : ''}`);
+            
+            // 제외 조건: 동일한 책(제목+작가 기준)이 selectedBooks에 있다면 돌림판 후보에서 삭제
+            return books.filter(b => !(r.selectedBooks || []).includes(b));
+        }
+
         function draw(rot=0) {
             const c = document.getElementById('roulette-canvas'); if(!c) return;
             const ctx = c.getContext('2d');
@@ -382,7 +417,7 @@
                 return;
             }
 
-            let books = r.proposals[mId] ? r.proposals[mId].filter(x=>x.trim()) : [];
+            let books = getValidBooksForMember(r, mId);
             const spinCount = r.spinCounts[mId] || 0;
             
             document.getElementById('roulette-book-count').innerText = books.length;
@@ -390,7 +425,7 @@
             
             if(!books.length) { 
                 ctx.fillStyle='rgba(243,244,246,0.6)'; ctx.beginPath(); ctx.arc(cx,cy,radius,0,Math.PI*2); ctx.fill(); 
-                ctx.fillStyle='#9ca3af'; ctx.font='bold 16px Pretendard'; ctx.textAlign='center'; ctx.fillText('책을 등록해주세요', cx, cy+5); 
+                ctx.fillStyle='#9ca3af'; ctx.font='bold 16px Pretendard'; ctx.textAlign='center'; ctx.fillText('가능한 책이 없습니다', cx, cy+5); 
                 return; 
             }
             
@@ -405,7 +440,7 @@
                 
                 ctx.save(); ctx.translate(cx,cy); ctx.rotate(a+ang/2); ctx.textAlign='right'; 
                 ctx.fillStyle='#1f2937'; ctx.font='bold 16px Pretendard'; 
-                ctx.fillText(b.length > 7 ? b.substring(0,6) + '..' : b, radius - 25, 5); ctx.restore();
+                ctx.fillText(b.length > 8 ? b.substring(0,7) + '..' : b, radius - 25, 5); ctx.restore();
             });
         }
 
@@ -413,7 +448,7 @@
             const mId = window.state.selectedRouletteMember;
             if(!mId) return showToast("멤버를 먼저 추가/선택해주세요.");
             const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
-            let books = r.proposals[mId] ? r.proposals[mId].filter(x=>x.trim()) : [];
+            let books = getValidBooksForMember(r, mId);
             const spinCount = r.spinCounts[mId] || 0;
 
             if(window.state.isSpinning) return;
@@ -421,7 +456,7 @@
                 alert("돌림판 횟수가 없습니다.");
                 return;
             }
-            if(!books.length) return showToast("등록된 책이 없습니다!");
+            if(!books.length) return showToast("돌릴 수 있는 책이 없습니다! (미등록 또는 모두 소진됨)");
 
             window.state.isSpinning=true; 
             r.spinCounts[mId] = spinCount + 1; 
@@ -439,6 +474,11 @@
                     const sel = books[Math.floor(off/((Math.PI*2)/books.length))];
                     
                     const latestRound = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
+
+                    // 누군가 뽑은 책을 목록에 기록하여 다른 사람이 중복 당첨되지 않도록 함
+                    if(!latestRound.selectedBooks.includes(sel)) {
+                        latestRound.selectedBooks.push(sel);
+                    }
 
                     // 1차(배열 첫 번째 인덱스)에 돌림판 결과 자동 배정
                     latestRound.assignments[mId][0] = latestRound.assignments[mId][0] || {};
@@ -483,6 +523,11 @@
         window.clearBook = (mId, pIndex) => {
             if(!confirm("배정된 책을 취소할까요? (다시 돌림판을 돌릴 수 있습니다)")) return;
             const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
+            
+            // 취소 시 selectedBooks 목록에서도 삭제하여 다시 돌릴 수 있게 복구
+            const bookToClear = r.assignments[mId][pIndex].bookTitle;
+            r.selectedBooks = (r.selectedBooks || []).filter(b => b !== bookToClear);
+
             r.assignments[mId][pIndex].bookTitle = '';
             r.assignments[mId][pIndex].progress = 0;
             r.assignments[mId][pIndex].currentPage = 0;
@@ -512,7 +557,7 @@
                 </div>
             `;
 
-            // 셀렉트박스에 표시될 교환 가능한 책 목록 (1차에서 돌림판으로 선정된 전체 책)
+            // 셀렉트박스에 표시될 교환 가능한 책 목록 (1차에서 돌림판으로 선정된 전체 책 포맷팅 완료 버전)
             let exchangePoolBooks = window.state.members.map(m => r.assignments[m.id]?.[0]?.bookTitle).filter(b => b && b.trim() !== '');
 
             document.getElementById('status-list').innerHTML = window.state.members.map(m => {
