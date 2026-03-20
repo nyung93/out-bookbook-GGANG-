@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>돌려돌려 교독깡! 🎲</title>
     
-    <!-- 1. Tailwind CSS (디자인) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -26,21 +25,14 @@
             }
         }
     </script>
-
-    <!-- 2. FontAwesome (아이콘) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- 3. Pretendard (폰트) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 
     <style>
         body { font-family: 'Pretendard', sans-serif; background-color: #f9fafb; -webkit-tap-highlight-color: transparent; }
-        
-        /* 스크롤바 숨기기 */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Range 슬라이더 커스텀 */
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none; height: 20px; width: 20px;
@@ -48,8 +40,7 @@
             margin-top: -6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 8px; cursor: pointer;
-            background: #e5e7eb; border-radius: 4px;
+            width: 100%; height: 8px; cursor: pointer; background: #e5e7eb; border-radius: 4px;
         }
     </style>
 </head>
@@ -61,7 +52,7 @@
         <span id="toast-text" class="font-medium whitespace-nowrap"></span>
     </div>
 
-    <!-- 헤더 및 메뉴 -->
+    <!-- 헤더 -->
     <header class="bg-white shadow-sm pt-8 pb-4 px-4 sticky top-0 z-10 w-full">
         <div class="max-w-2xl mx-auto">
             <h1 class="text-3xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 mb-6 tracking-tight">
@@ -88,12 +79,11 @@
     <!-- 메인 컨텐츠 영역 -->
     <main class="p-4 max-w-2xl mx-auto">
         
-        <!-- 회차 선택 (멤버 탭 제외 시 보임) -->
+        <!-- 회차 선택 -->
         <div id="round-selector-wrapper" class="hidden mb-6 flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-gray-100">
             <span class="font-bold text-gray-700 ml-1">현재 진행 회차</span>
             <div class="flex gap-2 w-[60%] sm:w-1/2">
                 <select id="round-select" onchange="changeRound(this.value)" class="bg-gray-50 border border-gray-200 text-gray-700 font-medium rounded-lg focus:ring-2 focus:ring-pink-400 block w-full p-2 outline-none appearance-none cursor-pointer">
-                    <!-- JS 렌더링 -->
                 </select>
                 <button onclick="addRound()" class="bg-pink-100 text-pink-600 p-2 rounded-lg hover:bg-pink-200 transition-colors shadow-sm flex-shrink-0">
                     <i class="fa-solid fa-plus text-[18px]"></i>
@@ -109,23 +99,17 @@
                 </h2>
                 <div class="mb-4">
                     <label class="text-xs text-gray-500 font-semibold mb-2 block ml-1">아바타 선택</label>
-                    <div id="avatar-list" class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                        <!-- JS 렌더링 -->
-                    </div>
+                    <div id="avatar-list" class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"></div>
                 </div>
                 <div class="flex gap-2">
                     <input type="text" id="new-member-name" onkeydown="if(event.key==='Enter') addMember()" placeholder="이름(닉네임) 입력 후 엔터" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-pink-300 font-medium">
-                    <button onclick="addMember()" class="bg-pink-500 text-white px-5 rounded-xl font-bold hover:bg-pink-600 transition-colors active:scale-95 shadow-sm">
-                        등록
-                    </button>
+                    <button onclick="addMember()" class="bg-pink-500 text-white px-5 rounded-xl font-bold hover:bg-pink-600 transition-colors active:scale-95 shadow-sm">등록</button>
                 </div>
             </div>
 
             <div>
                 <h3 class="text-sm font-bold text-gray-500 mb-3 ml-2 uppercase tracking-wider">참여 중인 멤버 (<span id="member-count">0</span>)</h3>
-                <div id="member-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <!-- JS 렌더링 -->
-                </div>
+                <div id="member-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
             </div>
         </div>
 
@@ -134,12 +118,10 @@
             <div class="bg-indigo-50 p-4 rounded-2xl flex gap-4 items-start border border-indigo-100 shadow-sm">
                 <i class="fa-solid fa-circle-exclamation text-indigo-500 shrink-0 mt-0.5 text-[20px]"></i>
                 <p class="text-sm text-indigo-900 leading-relaxed font-medium">
-                    이번 회차에 읽고 싶은 책을 멤버당 <b>최대 4권</b> 등록하세요.<br/>입력된 책은 돌림판 후보가 됩니다.
+                    이번 회차에 읽고 싶은 책을 멤버당 <b>최대 4권</b> 등록하세요.<br/>(입력 후 바깥을 터치하면 자동 저장됩니다)
                 </p>
             </div>
-            <div id="books-list" class="space-y-5">
-                <!-- JS 렌더링 -->
-            </div>
+            <div id="books-list" class="space-y-5"></div>
         </div>
 
         <!-- 3. 돌림판 탭 -->
@@ -190,71 +172,150 @@
                 <i class="fa-solid fa-bars-progress text-pink-500"></i> 멤버별 진행 현황
             </h2>
             
-            <div id="status-list" class="space-y-4">
-                <!-- JS 렌더링 -->
-            </div>
+            <div id="status-list" class="space-y-4"></div>
         </div>
     </main>
 
-    <!-- 바닐라 자바스크립트 로직 (의존성 없음) -->
-    <script>
+    <!-- 클라우드 연동 로직 (Firebase) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==============================================================
+        // 🚀 Vercel 배포 시, 아래 null 값을 지우고 본인의 Firebase 설정을 넣으세요!
+        // 예시: const myFirebaseConfig = { apiKey: "...", projectId: "..." };
+        // ==============================================================
+        const myFirebaseConfig = null; 
+
+        let db, docRef;
+        let isCloudSyncing = false;
+
         const AVATARS = ['🐰', '🐻', '🦊', '🐼', '🐱', '🐶', '🐯', '🐸', '🐹', '🐨'];
         const COLORS = ['#FF9AA2', '#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#F1CBFF', '#D4F0F0'];
         
-        let state = {
+        window.state = {
             activeTab: 'members',
-            members: [
-                { id: '1', name: '앨리스', avatar: '🐰' },
-                { id: '2', name: '제이든', avatar: '🦊' }
-            ],
-            rounds: [
-                { id: 1, startDate: '', endDate: '', proposals: {}, assignments: {}, spinCount: 0, selectedBooks: [] }
-            ],
+            members: [],
+            rounds: [{ id: 1, startDate: '', endDate: '', proposals: {}, assignments: {}, spinCount: 0, selectedBooks: [] }],
             currentRoundId: 1,
             selectedAvatar: '🐰',
             isSpinning: false,
             toastTimer: null
         };
 
-        // 초기화
-        window.onload = () => {
-            ensureData();
-            renderAvatars();
-            renderMembersList();
-            renderRoundSelector();
-        };
+        // Firebase 초기화 함수
+        async function initStorage() {
+            try {
+                const configRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+                const firebaseConfig = myFirebaseConfig || (configRaw ? JSON.parse(configRaw) : null);
 
-        // 공통 데이터 함수
+                if (!firebaseConfig) {
+                    console.warn("Firebase 설정이 없습니다. 페이지를 닫으면 데이터가 초기화됩니다.");
+                    initializeAppUI();
+                    return;
+                }
+
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                db = getFirestore(app);
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'gyodok-app'; // 고유 앱 ID
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        docRef = doc(db, 'artifacts', appId, 'public', 'data', 'gyodokState');
+                        
+                        // 데이터 실시간 감지
+                        onSnapshot(docRef, (snapshot) => {
+                            if (snapshot.exists()) {
+                                isCloudSyncing = true;
+                                const cloudData = snapshot.data();
+                                // 화면과 데이터 동기화
+                                window.state.members = cloudData.members || [];
+                                window.state.rounds = cloudData.rounds || window.state.rounds;
+                                window.state.currentRoundId = cloudData.currentRoundId || window.state.currentRoundId;
+                                refreshAllUI();
+                                isCloudSyncing = false;
+                            } else {
+                                saveStateToCloud(); // 최초 접속 시 빈 데이터 생성
+                                initializeAppUI();
+                            }
+                        }, (error) => {
+                            console.error("클라우드 연결 에러:", error);
+                        });
+                    }
+                });
+            } catch(e) {
+                console.error("Storage 초기화 실패:", e);
+                initializeAppUI();
+            }
+        }
+
+        window.saveStateToCloud = async function(silent = false) {
+            if (!docRef || isCloudSyncing) return;
+            try {
+                // 저장할 핵심 데이터만 추출
+                const saveData = {
+                    members: window.state.members,
+                    rounds: window.state.rounds,
+                    currentRoundId: window.state.currentRoundId
+                };
+                await setDoc(docRef, saveData);
+                if(!silent) showToast("☁️ 클라우드에 실시간 저장됨");
+            } catch(e) {
+                console.error("상태 저장 실패:", e);
+            }
+        }
+
+        // --- 바닐라 자바스크립트 로직 ---
+        window.onload = initStorage;
+
+        function initializeAppUI() {
+            ensureData(); renderAvatars(); renderMembersList(); renderRoundSelector();
+        }
+
+        window.refreshAllUI = function() {
+            ensureData();
+            renderRoundSelector();
+            if(window.state.activeTab === 'members') { renderAvatars(); renderMembersList(); }
+            if(window.state.activeTab === 'books') renderBooksTab();
+            if(window.state.activeTab === 'roulette') drawWheel();
+            if(window.state.activeTab === 'status') renderStatusTab();
+        }
+
         function getCurrentRound() {
-            return state.rounds.find(r => r.id === state.currentRoundId) || state.rounds[0];
+            return window.state.rounds.find(r => r.id === window.state.currentRoundId) || window.state.rounds[0];
         }
 
         function ensureData() {
             const round = getCurrentRound();
-            state.members.forEach(m => {
+            if(!round.proposals) round.proposals = {};
+            if(!round.assignments) round.assignments = {};
+            window.state.members.forEach(m => {
                 if (!round.proposals[m.id]) round.proposals[m.id] = ['', '', '', ''];
                 if (!round.assignments[m.id]) round.assignments[m.id] = { bookTitle: '', progress: 0 };
             });
         }
 
-        function showToast(msg) {
+        window.showToast = function(msg) {
             const toast = document.getElementById('toast-msg');
             document.getElementById('toast-text').innerText = msg;
             toast.classList.remove('hidden'); toast.classList.add('flex');
-            
-            toast.style.animation = 'none';
-            toast.offsetHeight; /* trigger reflow */
-            toast.style.animation = null; 
-            
-            if(state.toastTimer) clearTimeout(state.toastTimer);
-            state.toastTimer = setTimeout(() => {
+            toast.style.animation = 'none'; toast.offsetHeight; toast.style.animation = null; 
+            if(window.state.toastTimer) clearTimeout(window.state.toastTimer);
+            window.state.toastTimer = setTimeout(() => {
                 toast.classList.add('hidden'); toast.classList.remove('flex');
             }, 3000);
         }
 
-        // 탭 전환
         window.switchTab = function(tabId) {
-            state.activeTab = tabId;
+            window.state.activeTab = tabId;
             ['members', 'books', 'roulette', 'status'].forEach(id => {
                 const btn = document.getElementById(`btn-tab-${id}`);
                 const content = document.getElementById(`tab-${id}`);
@@ -266,84 +327,63 @@
                     content.classList.add('hidden');
                 }
             });
-
             document.getElementById('round-selector-wrapper').classList.toggle('hidden', tabId === 'members');
-
-            if(tabId === 'books') renderBooksTab();
-            if(tabId === 'roulette') {
-                document.getElementById('roulette-result').classList.add('hidden'); // 결과 초기화
-                drawWheel();
-            }
-            if(tabId === 'status') renderStatusTab();
+            refreshAllUI();
         };
 
-        // 회차 관리
         function renderRoundSelector() {
             const select = document.getElementById('round-select');
-            select.innerHTML = state.rounds.map(r => `<option value="${r.id}">${r.id}회차 교환독서</option>`).join('');
-            select.value = state.currentRoundId;
+            select.innerHTML = window.state.rounds.map(r => `<option value="${r.id}">${r.id}회차 교환독서</option>`).join('');
+            select.value = window.state.currentRoundId;
         }
 
         window.changeRound = function(val) {
-            state.currentRoundId = Number(val);
-            ensureData();
-            if(state.activeTab === 'books') renderBooksTab();
-            if(state.activeTab === 'roulette') drawWheel();
-            if(state.activeTab === 'status') renderStatusTab();
+            window.state.currentRoundId = Number(val);
+            saveStateToCloud(true);
+            refreshAllUI();
         };
 
         window.addRound = function() {
-            const newId = state.rounds.length > 0 ? Math.max(...state.rounds.map(r => r.id)) + 1 : 1;
-            state.rounds.push({ id: newId, startDate: '', endDate: '', proposals: {}, assignments: {}, spinCount: 0, selectedBooks: [] });
-            state.currentRoundId = newId;
-            ensureData();
-            renderRoundSelector();
-            switchTab(state.activeTab); // 현재 탭 리프레시
+            const newId = window.state.rounds.length > 0 ? Math.max(...window.state.rounds.map(r => r.id)) + 1 : 1;
+            window.state.rounds.push({ id: newId, startDate: '', endDate: '', proposals: {}, assignments: {}, spinCount: 0, selectedBooks: [] });
+            window.state.currentRoundId = newId;
+            saveStateToCloud(true);
+            refreshAllUI();
             showToast(`${newId}회차가 추가되었습니다.`);
         };
 
-        // 멤버 탭
         function renderAvatars() {
             document.getElementById('avatar-list').innerHTML = AVATARS.map(avatar => `
-                <button onclick="selectAvatar('${avatar}')" class="text-3xl p-2 rounded-2xl transition-all flex-shrink-0 ${state.selectedAvatar === avatar ? 'bg-pink-100 ring-2 ring-pink-400 scale-110' : 'bg-gray-50 hover:bg-gray-100 opacity-60 hover:opacity-100'}">
+                <button onclick="selectAvatar('${avatar}')" class="text-3xl p-2 rounded-2xl transition-all flex-shrink-0 ${window.state.selectedAvatar === avatar ? 'bg-pink-100 ring-2 ring-pink-400 scale-110' : 'bg-gray-50 hover:bg-gray-100 opacity-60 hover:opacity-100'}">
                     ${avatar}
                 </button>
             `).join('');
         }
 
-        window.selectAvatar = function(avatar) {
-            state.selectedAvatar = avatar;
-            renderAvatars();
-        };
+        window.selectAvatar = function(avatar) { window.state.selectedAvatar = avatar; renderAvatars(); };
 
         window.addMember = function() {
             const input = document.getElementById('new-member-name');
             const name = input.value.trim();
             if(!name) { showToast('이름을 입력해주세요!'); return; }
-            
-            state.members.push({ id: Date.now().toString(), name, avatar: state.selectedAvatar });
-            input.value = '';
-            state.selectedAvatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
-            
-            ensureData(); renderAvatars(); renderMembersList();
-            showToast('멤버가 추가되었습니다.');
+            window.state.members.push({ id: Date.now().toString(), name, avatar: window.state.selectedAvatar });
+            input.value = ''; window.state.selectedAvatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+            saveStateToCloud(true); refreshAllUI();
         };
 
         window.removeMember = function(id) {
-            state.members = state.members.filter(m => m.id !== id);
-            renderMembersList();
+            window.state.members = window.state.members.filter(m => m.id !== id);
+            saveStateToCloud(true); refreshAllUI();
         };
 
         function renderMembersList() {
             const container = document.getElementById('member-list');
-            document.getElementById('member-count').innerText = state.members.length;
-            
-            if(state.members.length === 0) {
+            document.getElementById('member-count').innerText = window.state.members.length;
+            if(window.state.members.length === 0) {
                 container.innerHTML = `<div class="col-span-1 sm:col-span-2 text-center text-gray-400 py-12 bg-white rounded-2xl border-2 border-dashed border-gray-200 font-medium"><i class="fa-solid fa-user-slash text-[32px] mb-3 block text-gray-300"></i> 아직 등록된 멤버가 없어요.</div>`;
                 return;
             }
-
-            container.innerHTML = state.members.map(m => `
+            container.innerHTML = window.state.members.map(m => `
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:border-pink-200 transition-colors">
                     <div class="flex items-center gap-4">
                         <div class="bg-gray-50 rounded-xl p-2 text-3xl shadow-sm">${m.avatar}</div>
@@ -356,13 +396,11 @@
             `).join('');
         }
 
-        // 책 등록 탭
         function renderBooksTab() {
             const container = document.getElementById('books-list');
             const round = getCurrentRound();
-            
             let html = '';
-            state.members.forEach(m => {
+            window.state.members.forEach(m => {
                 const props = round.proposals[m.id] || ['', '', '', ''];
                 html += `<div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                     <div class="flex items-center gap-3 mb-5 pb-4 border-b border-gray-100">
@@ -370,9 +408,10 @@
                         <h3 class="font-extrabold text-lg text-gray-800">${m.name}의 희망 도서</h3>
                     </div><div class="space-y-3">`;
                 for(let i=0; i<4; i++) {
+                    // 데이터 최적화를 위해 onchange (입력 완료 시점)에만 서버 저장 수행
                     html += `<div class="flex items-center gap-3 relative">
                         <span class="text-gray-400 font-black w-4 text-center text-sm">${i+1}</span>
-                        <input type="text" oninput="updateBook('${m.id}', ${i}, this.value)" value="${props[i]}" placeholder="도서명 입력 (선택)" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-300 transition-all">
+                        <input type="text" onchange="updateBook('${m.id}', ${i}, this.value)" value="${props[i]}" placeholder="도서명 입력 (입력 후 바깥 터치)" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-300 transition-all">
                     </div>`;
                 }
                 html += `</div></div>`;
@@ -382,17 +421,16 @@
 
         window.updateBook = function(mId, idx, val) {
             getCurrentRound().proposals[mId][idx] = val;
+            saveStateToCloud(); // 값이 확정되었을 때 서버에 저장
         };
 
-        // 돌림판 탭
         function getAllProposedBooks() {
-            const round = getCurrentRound();
-            let books = [];
+            const round = getCurrentRound(); let books = [];
             for (let mId in round.proposals) { books.push(...round.proposals[mId]); }
             return books.filter(b => b && b.trim() !== '');
         }
 
-        function drawWheel(rotation = 0) {
+        window.drawWheel = function(rotation = 0) {
             const canvas = document.getElementById('roulette-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
@@ -408,9 +446,9 @@
             document.getElementById('roulette-spin-left').innerText = spinLeft;
 
             const btn = document.getElementById('btn-spin');
-            if(state.isSpinning || spinLeft === 0 || books.length === 0) {
+            if(window.state.isSpinning || spinLeft === 0 || books.length === 0) {
                 btn.className = "w-full py-4 mt-4 rounded-2xl font-extrabold text-lg text-white shadow-xl transition-all duration-300 bg-gray-300 cursor-not-allowed text-gray-500 shadow-none";
-                if(!state.isSpinning) document.getElementById('btn-spin-content').innerHTML = spinLeft === 0 ? `<i class="fa-solid fa-lock mr-2"></i>돌림판 마감` : `<i class="fa-solid fa-dice-d20 mr-2"></i>돌림판 돌리기!`;
+                if(!window.state.isSpinning) document.getElementById('btn-spin-content').innerHTML = spinLeft === 0 ? `<i class="fa-solid fa-lock mr-2"></i>돌림판 마감` : `<i class="fa-solid fa-dice-d20 mr-2"></i>돌림판 돌리기!`;
             } else {
                 btn.className = "w-full py-4 mt-4 rounded-2xl font-extrabold text-lg text-white shadow-xl transition-all duration-300 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:scale-[1.02] active:scale-[0.98]";
                 document.getElementById('btn-spin-content').innerHTML = `<i class="fa-solid fa-dice-d20 mr-2"></i>돌림판 돌리기!`;
@@ -418,44 +456,35 @@
 
             if (books.length === 0) {
                 ctx.fillStyle = '#f3f4f6'; ctx.beginPath(); ctx.arc(cx, cy, radius, 0, 2 * Math.PI); ctx.fill();
-                ctx.fillStyle = '#9ca3af'; ctx.font = 'bold 16px Pretendard, sans-serif';
-                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText('등록된 책이 없습니다', cx, cy);
-                return;
+                ctx.fillStyle = '#9ca3af'; ctx.font = 'bold 16px Pretendard, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText('등록된 책이 없습니다', cx, cy); return;
             }
 
             const sliceAngle = (2 * Math.PI) / books.length;
             books.forEach((book, i) => {
                 const angle = rotation + i * sliceAngle;
                 ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, angle, angle + sliceAngle); ctx.closePath();
-                ctx.fillStyle = COLORS[i % COLORS.length]; ctx.fill();
-                ctx.lineWidth = 3; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+                ctx.fillStyle = COLORS[i % COLORS.length]; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#ffffff'; ctx.stroke();
 
-                ctx.save();
-                ctx.translate(cx, cy); ctx.rotate(angle + sliceAngle / 2);
-                ctx.textAlign = 'right'; ctx.fillStyle = '#1f2937'; ctx.font = 'bold 15px Pretendard, sans-serif';
-                
-                let displayText = book.length > 9 ? book.substring(0, 8) + '..' : book;
-                ctx.fillText(displayText, radius - 25, 5);
-                ctx.restore();
+                ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle + sliceAngle / 2); ctx.textAlign = 'right'; ctx.fillStyle = '#1f2937'; ctx.font = 'bold 15px Pretendard, sans-serif';
+                let displayText = book.length > 9 ? book.substring(0, 8) + '..' : book; ctx.fillText(displayText, radius - 25, 5); ctx.restore();
             });
 
-            // 중앙 핀
             ctx.beginPath(); ctx.arc(cx, cy, 22, 0, 2 * Math.PI); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = '#e5e7eb'; ctx.stroke();
             ctx.beginPath(); ctx.arc(cx, cy, 8, 0, 2 * Math.PI); ctx.fillStyle = '#d1d5db'; ctx.fill();
-            // 포인터
             ctx.beginPath(); ctx.moveTo(cx, cy - radius + 10); ctx.lineTo(cx - 15, cy - radius - 20); ctx.lineTo(cx + 15, cy - radius - 20); ctx.closePath();
             ctx.fillStyle = '#ec4899'; ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 5; ctx.shadowOffsetY = 2; ctx.fill(); ctx.shadowColor = 'transparent';
         }
 
         window.spinWheel = function() {
             const books = getAllProposedBooks();
-            if (state.isSpinning || getCurrentRound().spinCount >= 3 || books.length === 0) return;
+            if (window.state.isSpinning || getCurrentRound().spinCount >= 3 || books.length === 0) return;
 
-            state.isSpinning = true;
+            window.state.isSpinning = true;
             document.getElementById('roulette-result').classList.add('hidden');
             getCurrentRound().spinCount++;
-            drawWheel(); // update button state immediately
+            saveStateToCloud(true); // 스핀 횟수 동기화
+            drawWheel(); 
             
             document.getElementById('btn-spin-content').innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>운명의 책 고르는 중...`;
 
@@ -468,13 +497,11 @@
                 const progress = Math.min((currentTime - startTime) / spinDuration, 1);
                 const easeProgress = 1 - Math.pow(1 - progress, 4);
                 const currentRotation = startRotation + (targetRotation - startRotation) * easeProgress;
-
                 drawWheel(currentRotation);
 
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                } else {
-                    state.isSpinning = false;
+                if (progress < 1) { requestAnimationFrame(animate); } 
+                else {
+                    window.state.isSpinning = false;
                     const normalizedRotation = currentRotation % (2 * Math.PI);
                     const sliceAngle = (2 * Math.PI) / books.length;
                     const offset = (Math.PI * 1.5 - normalizedRotation + Math.PI * 4) % (2 * Math.PI);
@@ -485,22 +512,25 @@
                         getCurrentRound().selectedBooks.push(selected);
                     }
                     
-                    drawWheel(currentRotation); // 최종 버튼 상태 갱신
+                    drawWheel(currentRotation);
                     document.getElementById('result-book-name').innerText = `"${selected}"`;
                     document.getElementById('roulette-result').classList.remove('hidden');
+                    saveStateToCloud(); // 결과 뽑힌 것 서버 저장
                 }
             };
             requestAnimationFrame(animate);
         };
 
-        // 현황 탭
         function getAvailableBooks() {
             const proposals = getAllProposedBooks();
             const selected = getCurrentRound().selectedBooks || [];
             return [...new Set([...proposals, ...selected])];
         }
 
-        window.updateDate = function(field, val) { getCurrentRound()[field] = val; };
+        window.updateDate = function(field, val) { 
+            getCurrentRound()[field] = val; 
+            saveStateToCloud();
+        };
 
         function renderStatusTab() {
             const container = document.getElementById('status-list');
@@ -509,15 +539,14 @@
             document.getElementById('date-start').value = round.startDate;
             document.getElementById('date-end').value = round.endDate;
 
-            if(state.members.length === 0) {
+            if(window.state.members.length === 0) {
                 container.innerHTML = `<div class="text-center text-gray-400 py-10 bg-white rounded-2xl border-2 border-dashed border-gray-200 font-medium"><i class="fa-solid fa-users-rays text-[32px] mb-3 block text-gray-300"></i> 먼저 멤버를 추가해주세요.</div>`;
                 return;
             }
 
             const availBooks = getAvailableBooks();
             let html = '';
-            
-            state.members.forEach(m => {
+            window.state.members.forEach(m => {
                 const assign = round.assignments[m.id];
                 const isComplete = assign.progress == 100;
                 
@@ -563,10 +592,10 @@
         window.updateAssign = function(mId, val) {
             getCurrentRound().assignments[mId].bookTitle = val;
             if(!val) getCurrentRound().assignments[mId].progress = 0;
+            saveStateToCloud(true);
             renderStatusTab();
         };
 
-        // 시각적 게이지바 부드러운 업데이트 (리렌더링 방지)
         window.updateProgUI = function(mId, val) {
             const textEl = document.getElementById(`prog-text-${mId}`);
             const barEl = document.getElementById(`prog-bar-${mId}`);
@@ -576,7 +605,8 @@
 
         window.saveProg = function(mId, val) {
             getCurrentRound().assignments[mId].progress = Number(val);
-            renderStatusTab(); // 100% 도달 시 초록색 스타일 적용을 위한 리렌더링
+            saveStateToCloud(); 
+            renderStatusTab(); 
         };
     </script>
 </body>
