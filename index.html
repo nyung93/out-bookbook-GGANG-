@@ -4,199 +4,130 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>돌려돌려 교독깡! 🎲</title>
-    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: { sans: ['Pretendard', 'sans-serif'] },
-                    animation: {
-                        'fade-in': 'fadeIn 0.3s ease-out forwards',
-                        'bounce-slow': 'bounce 2s infinite',
-                    },
-                    keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0', transform: 'translateY(10px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        }
-                    }
                 }
             }
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-
     <style>
         body { font-family: 'Pretendard', sans-serif; background-color: #f9fafb; -webkit-tap-highlight-color: transparent; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 20px; width: 20px;
-            border-radius: 50%; background: #ec4899; cursor: pointer;
-            margin-top: -6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 8px; cursor: pointer; background: #e5e7eb; border-radius: 4px;
-        }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #ec4899; cursor: pointer; margin-top: -6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #e5e7eb; border-radius: 4px; }
+        .tab-active { background-color: white; color: #ec4899; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transform: scale(1.02); }
+        .tab-inactive { color: #6b7280; }
     </style>
 </head>
 <body class="pb-20 text-gray-800 relative min-h-screen">
     
     <!-- 토스트 알림 -->
-    <div id="toast-msg" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl items-center gap-3 animate-bounce-slow transition-all">
-        <i class="fa-solid fa-circle-info"></i>
-        <span id="toast-text" class="font-medium whitespace-nowrap"></span>
+    <div id="toast-msg" class="hidden fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-gray-900/90 text-white px-6 py-3 rounded-full shadow-2xl items-center gap-3 transition-all duration-300">
+        <i class="fa-solid fa-circle-info text-pink-400"></i><span id="toast-text" class="font-medium whitespace-nowrap text-sm"></span>
     </div>
 
-    <!-- 헤더 -->
-    <header class="bg-white shadow-sm pt-8 pb-4 px-4 sticky top-0 z-10 w-full">
+    <header class="bg-white shadow-sm pt-8 pb-4 px-4 sticky top-0 z-50 w-full">
         <div class="max-w-2xl mx-auto">
-            <h1 class="text-3xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 mb-6 tracking-tight">
-                🎲 돌려돌려 교독깡!
-            </h1>
+            <h1 class="text-3xl font-black text-center text-transparent bg-clip-text bg-gradient-to-br from-pink-500 to-indigo-600 mb-2">🎲 돌려돌려 교독깡!</h1>
             
-            <div class="flex justify-between items-center bg-gray-100 rounded-2xl p-1.5 shadow-inner">
-                <button id="btn-tab-members" onclick="switchTab('members')" class="flex-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-xl text-[13px] font-bold transition-all duration-200 bg-white text-pink-600 shadow-sm scale-[1.02]">
-                    <i class="fa-solid fa-users mb-1.5 text-[18px]"></i><span>멤버</span>
-                </button>
-                <button id="btn-tab-books" onclick="switchTab('books')" class="flex-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-xl text-[13px] font-bold transition-all duration-200 text-gray-500 hover:text-gray-800">
-                    <i class="fa-solid fa-book-open mb-1.5 text-[18px]"></i><span>책 등록</span>
-                </button>
-                <button id="btn-tab-roulette" onclick="switchTab('roulette')" class="flex-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-xl text-[13px] font-bold transition-all duration-200 text-gray-500 hover:text-gray-800">
-                    <i class="fa-solid fa-dice mb-1.5 text-[18px]"></i><span>돌림판</span>
-                </button>
-                <button id="btn-tab-status" onclick="switchTab('status')" class="flex-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-xl text-[13px] font-bold transition-all duration-200 text-gray-500 hover:text-gray-800">
-                    <i class="fa-solid fa-chart-simple mb-1.5 text-[18px]"></i><span>현황</span>
-                </button>
+            <!-- ⭐ 연결 상태 표시 바 ⭐ -->
+            <div id="conn-status" class="mb-6 text-center py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest bg-gray-100 text-gray-400 max-w-[240px] mx-auto border border-gray-200 shadow-inner transition-colors">
+                서버 연결 확인 중...
             </div>
+            
+            <nav class="flex justify-between items-center bg-gray-100 rounded-2xl p-1.5 shadow-inner">
+                <button id="btn-tab-members" onclick="switchTab('members')" class="flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl text-[13px] font-bold transition-all tab-active"><i class="fa-solid fa-users mb-1.5"></i><span>멤버</span></button>
+                <button id="btn-tab-books" onclick="switchTab('books')" class="flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl text-[13px] font-bold transition-all tab-inactive"><i class="fa-solid fa-book-open mb-1.5"></i><span>책 등록</span></button>
+                <button id="btn-tab-roulette" onclick="switchTab('roulette')" class="flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl text-[13px] font-bold transition-all tab-inactive"><i class="fa-solid fa-dice mb-1.5"></i><span>돌림판</span></button>
+                <button id="btn-tab-status" onclick="switchTab('status')" class="flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl text-[13px] font-bold transition-all tab-inactive"><i class="fa-solid fa-chart-simple mb-1.5"></i><span>현황</span></button>
+            </nav>
         </div>
     </header>
 
-    <!-- 메인 컨텐츠 영역 -->
-    <main class="p-4 max-w-2xl mx-auto">
-        
+    <main class="p-4 max-w-2xl mx-auto min-h-[60vh]">
         <!-- 회차 선택 -->
-        <div id="round-selector-wrapper" class="hidden mb-6 flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-            <span class="font-bold text-gray-700 ml-1">현재 진행 회차</span>
-            <div class="flex gap-2 w-[60%] sm:w-1/2">
-                <select id="round-select" onchange="changeRound(this.value)" class="bg-gray-50 border border-gray-200 text-gray-700 font-medium rounded-lg focus:ring-2 focus:ring-pink-400 block w-full p-2 outline-none appearance-none cursor-pointer">
-                </select>
-                <button onclick="addRound()" class="bg-pink-100 text-pink-600 p-2 rounded-lg hover:bg-pink-200 transition-colors shadow-sm flex-shrink-0">
-                    <i class="fa-solid fa-plus text-[18px]"></i>
-                </button>
+        <div id="round-selector-wrapper" class="hidden mb-6 flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+            <span class="font-bold text-gray-700 ml-1 flex items-center gap-2"><i class="fa-solid fa-layer-group text-pink-400"></i> 진행 회차</span>
+            <div class="flex gap-2 w-[60%]"><select id="round-select" onchange="changeRound(this.value)" class="bg-gray-50 border border-gray-200 rounded-xl w-full p-2.5 outline-none appearance-none font-bold text-gray-600"></select>
+                <button onclick="addRound()" class="bg-pink-100 text-pink-600 px-3 rounded-xl hover:bg-pink-200 transition-colors"><i class="fa-solid fa-plus"></i></button>
             </div>
         </div>
 
         <!-- 1. 멤버 탭 -->
-        <div id="tab-members" class="animate-fade-in space-y-5">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-gray-800">
-                    <i class="fa-solid fa-user-plus text-pink-500"></i> 멤버 추가하기
-                </h2>
-                <div class="mb-4">
-                    <label class="text-xs text-gray-500 font-semibold mb-2 block ml-1">아바타 선택</label>
-                    <div id="avatar-list" class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"></div>
-                </div>
+        <section id="tab-members" class="space-y-6">
+            <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
+                <h2 class="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800"><i class="fa-solid fa-user-plus text-pink-500"></i> 멤버 참여시키기</h2>
+                <div id="avatar-list" class="flex gap-3 overflow-x-auto pb-3 mb-5 scrollbar-hide"></div>
                 <div class="flex gap-2">
-                    <input type="text" id="new-member-name" onkeydown="if(event.key==='Enter') addMember()" placeholder="이름(닉네임) 입력 후 엔터" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-pink-300 font-medium">
-                    <button onclick="addMember()" class="bg-pink-500 text-white px-5 rounded-xl font-bold hover:bg-pink-600 transition-colors active:scale-95 shadow-sm">등록</button>
+                    <input type="text" id="new-member-name" placeholder="닉네임 입력 후 엔터" class="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 outline-none focus:ring-4 focus:ring-pink-100 transition-all font-bold">
+                    <button onclick="addMember()" class="bg-pink-500 text-white px-6 rounded-2xl font-black shadow-lg shadow-pink-200 active:scale-95 transition-all">등록</button>
                 </div>
             </div>
-
-            <div>
-                <h3 class="text-sm font-bold text-gray-500 mb-3 ml-2 uppercase tracking-wider">참여 중인 멤버 (<span id="member-count">0</span>)</h3>
-                <div id="member-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
-            </div>
-        </div>
+            <div id="member-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        </section>
 
         <!-- 2. 책 등록 탭 -->
-        <div id="tab-books" class="hidden animate-fade-in space-y-5">
-            <div class="bg-indigo-50 p-4 rounded-2xl flex gap-4 items-start border border-indigo-100 shadow-sm">
-                <i class="fa-solid fa-circle-exclamation text-indigo-500 shrink-0 mt-0.5 text-[20px]"></i>
-                <p class="text-sm text-indigo-900 leading-relaxed font-medium">
-                    이번 회차에 읽고 싶은 책을 멤버당 <b>최대 4권</b> 등록하세요.<br/>(입력 후 바깥을 터치하면 자동 저장됩니다)
-                </p>
+        <section id="tab-books" class="hidden space-y-4">
+            <div class="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 mb-2 flex items-start gap-3">
+                <i class="fa-solid fa-info-circle text-indigo-500 mt-1"></i>
+                <p class="text-xs font-bold text-indigo-800 leading-relaxed">입력된 도서명은 클라우드에 실시간 저장되어 친구들과 공유됩니다.</p>
             </div>
-            <div id="books-list" class="space-y-5"></div>
-        </div>
-
+            <div id="books-list" class="space-y-4"></div>
+        </section>
+        
         <!-- 3. 돌림판 탭 -->
-        <div id="tab-roulette" class="hidden animate-fade-in space-y-6 flex flex-col items-center">
-            <div class="bg-white w-full p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
-                <div>
-                    <h2 class="font-extrabold text-gray-800 text-lg">돌림판 후보</h2>
-                    <p class="text-sm text-gray-500 font-medium mt-1">총 <span id="roulette-book-count">0</span>권 대기중</p>
-                </div>
-                <div class="text-right bg-pink-50 py-2 px-4 rounded-xl border border-pink-100">
-                    <span class="text-[11px] font-bold text-pink-400 uppercase tracking-widest block mb-0.5">남은 기회</span>
-                    <div class="font-black text-2xl text-pink-600 leading-none">
-                        <span id="roulette-spin-left">3</span> <span class="text-lg text-pink-300">/ 3</span>
-                    </div>
-                </div>
+        <section id="tab-roulette" class="hidden flex flex-col items-center space-y-6">
+            <div class="bg-white w-full p-5 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm">
+                <div class="font-bold text-gray-700">돌림판 후보 <span id="roulette-book-count" class="text-pink-500 ml-1">0</span>권</div>
+                <div class="bg-pink-50 px-3 py-1 rounded-lg text-pink-600 font-black text-sm">남은 기회 <span id="roulette-spin-left">3</span> / 3</div>
             </div>
-
-            <div class="relative mt-4 w-full max-w-[340px] aspect-square flex justify-center items-center filter drop-shadow-xl mx-auto">
+            <div class="relative w-full max-w-[340px] aspect-square flex justify-center items-center drop-shadow-2xl">
                 <canvas id="roulette-canvas" width="340" height="340" class="w-full h-auto"></canvas>
             </div>
-
-            <button id="btn-spin" onclick="spinWheel()" class="w-full py-4 mt-4 rounded-2xl font-extrabold text-lg text-white shadow-xl transition-all duration-300 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:scale-[1.02] active:scale-[0.98]">
-                <span id="btn-spin-content"><i class="fa-solid fa-dice-d20 mr-2"></i>돌림판 돌리기!</span>
-            </button>
-
-            <div id="roulette-result" class="hidden w-full p-6 bg-white border-2 border-pink-200 rounded-2xl text-center shadow-lg relative overflow-hidden mt-4">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-400 to-purple-400"></div>
-                <span class="inline-block px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-bold mb-3">🎉 당첨 도서</span>
-                <h3 id="result-book-name" class="text-2xl font-black text-gray-800 break-words leading-tight"></h3>
-                <p class="text-sm text-gray-500 mt-3 font-medium">현황 탭에서 멤버에게 배정해주세요.</p>
+            <button id="btn-spin" onclick="spinWheel()" class="w-full py-5 rounded-3xl font-black text-xl text-white bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-600 shadow-xl shadow-pink-200 active:scale-95 transition-all">돌림판 가즈아!</button>
+            <div id="roulette-result" class="hidden w-full p-6 bg-white border-4 border-pink-100 rounded-3xl text-center shadow-xl animate-bounce">
+                <div class="text-pink-500 font-black text-sm mb-1 uppercase tracking-widest">Selected Book</div>
+                <h3 id="result-book-name" class="text-2xl font-black text-gray-800 break-all leading-tight"></h3>
             </div>
-        </div>
+        </section>
 
         <!-- 4. 현황 탭 -->
-        <div id="tab-status" class="hidden animate-fade-in space-y-6 pb-6">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                <h2 class="text-lg font-extrabold mb-4 flex items-center gap-2 text-gray-800">
-                    <i class="fa-solid fa-calendar-days text-purple-500"></i> 독서 기간 설정
-                </h2>
-                <div class="flex items-center gap-3">
-                    <input type="date" id="date-start" onchange="updateDate('startDate', this.value)" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-purple-300 font-medium text-gray-600">
-                    <span class="text-gray-400 font-black">~</span>
-                    <input type="date" id="date-end" onchange="updateDate('endDate', this.value)" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-purple-300 font-medium text-gray-600">
+        <section id="tab-status" class="hidden space-y-6">
+            <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex gap-4 items-center">
+                <i class="fa-solid fa-calendar-alt text-purple-500 text-xl"></i>
+                <div class="flex-1 flex items-center gap-2">
+                    <input type="date" id="date-start" onchange="updateDate('startDate', this.value)" class="bg-gray-50 p-2 rounded-xl text-xs font-bold flex-1">
+                    <span class="text-gray-300 font-black">~</span>
+                    <input type="date" id="date-end" onchange="updateDate('endDate', this.value)" class="bg-gray-50 p-2 rounded-xl text-xs font-bold flex-1">
                 </div>
             </div>
-
-            <h2 class="text-lg font-extrabold mt-8 mb-4 text-gray-800 px-1 flex items-center gap-2">
-                <i class="fa-solid fa-bars-progress text-pink-500"></i> 멤버별 진행 현황
-            </h2>
-            
             <div id="status-list" class="space-y-4"></div>
-        </div>
+        </section>
     </main>
 
-    <!-- 클라우드 연동 로직 (Firebase) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ==============================================================
-        // 🚀 Vercel 배포 시, 아래 null 값을 지우고 본인의 Firebase 설정을 넣으세요!
-        // 예시: const myFirebaseConfig = { apiKey: "...", projectId: "..." };
-        // ==============================================================
-       const myfirebaseConfig = {
-  apiKey: "AIzaSyDjPIRXqzv9oR8RUaEZ2lfUM6oPM6Z94Fg",
-  authDomain: "bookbook-ee256.firebaseapp.com",
-  projectId: "bookbook-ee256",
-  storageBucket: "bookbook-ee256.firebasestorage.app",
-  messagingSenderId: "666340383957",
-  appId: "1:666340383957:web:4cbc1b4fa1793b85c1165c"
-};
-
-        let db, docRef;
-        let isCloudSyncing = false;
+        // ==========================================
+        // 파이어베이스 API 정보
+        // ==========================================
+        const myFirebaseConfig = {
+            apiKey: "AIzaSyDjPIRXqzv9oR8RUaEZ2lfUM6oPM6Z94Fg",
+            authDomain: "bookbook-ee256.firebaseapp.com",
+            projectId: "bookbook-ee256",
+            storageBucket: "bookbook-ee256.firebasestorage.app",
+            messagingSenderId: "666340383957",
+            appId: "1:666340383957:web:4cbc1b4fa1793b85c1165c"
+        };
 
         const AVATARS = ['🐰', '🐻', '🦊', '🐼', '🐱', '🐶', '🐯', '🐸', '🐹', '🐨'];
         const COLORS = ['#FF9AA2', '#FFB7B2', '#FFDAC1', '#E2F0CB', '#B5EAD7', '#C7CEEA', '#F1CBFF', '#D4F0F0'];
@@ -207,137 +138,112 @@
             rounds: [{ id: 1, startDate: '', endDate: '', proposals: {}, assignments: {}, spinCount: 0, selectedBooks: [] }],
             currentRoundId: 1,
             selectedAvatar: '🐰',
-            isSpinning: false,
-            toastTimer: null
+            isSpinning: false
         };
 
-        // Firebase 초기화 함수
-        async function initStorage() {
+        let db, docRef, isCloudSyncing = false;
+
+        async function init() {
+            const statusLabel = document.getElementById('conn-status');
+
             try {
-                const configRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-                const firebaseConfig = myFirebaseConfig || (configRaw ? JSON.parse(configRaw) : null);
-
-                if (!firebaseConfig) {
-                    console.warn("Firebase 설정이 없습니다. 페이지를 닫으면 데이터가 초기화됩니다.");
-                    initializeAppUI();
-                    return;
-                }
-
-                const app = initializeApp(firebaseConfig);
+                const app = initializeApp(myFirebaseConfig);
                 const auth = getAuth(app);
                 db = getFirestore(app);
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'gyodok-app'; // 고유 앱 ID
-
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
+                
+                // 인증 상태 확인을 먼저 수행하여 권한 타이밍 오류 방지
+                onAuthStateChanged(auth, async (user) => {
                     if (user) {
-                        // 수정됨: 컬렉션 참조가 아닌 구체적인 문서 참조를 위해 마지막에 'main'이라는 문서 ID를 추가하여 짝수 세그먼트(6개)를 맞추었습니다.
-                        docRef = doc(db, 'artifacts', appId, 'public', 'data', 'gyodokState', 'main');
-                        
-                        // 데이터 실시간 감지
-                        onSnapshot(docRef, (snapshot) => {
-                            if (snapshot.exists()) {
+                        // Vercel 등 개인 파이어베이스용 심플한 저장 경로 적용
+                        docRef = doc(db, 'gyodokStore', 'mainData');
+
+                        onSnapshot(docRef, (snap) => {
+                            if (snap.exists()) {
                                 isCloudSyncing = true;
-                                const cloudData = snapshot.data();
-                                // 화면과 데이터 동기화
-                                window.state.members = cloudData.members || [];
-                                window.state.rounds = cloudData.rounds || window.state.rounds;
-                                window.state.currentRoundId = cloudData.currentRoundId || window.state.currentRoundId;
-                                refreshAllUI();
+                                const data = snap.data();
+                                window.state.members = data.members || [];
+                                window.state.rounds = data.rounds || window.state.rounds;
+                                window.state.currentRoundId = data.currentRoundId || 1;
+                                refreshAll();
                                 isCloudSyncing = false;
+                                
+                                statusLabel.innerText = "☁️ 클라우드 연결됨 ✅";
+                                statusLabel.className = "mb-6 text-center py-1.5 rounded-full text-[11px] font-black uppercase bg-green-100 text-green-600 max-w-[240px] mx-auto border border-green-200 shadow-sm";
                             } else {
-                                saveStateToCloud(); // 최초 접속 시 빈 데이터 생성
-                                initializeAppUI();
+                                save(true);
+                                refreshAll();
                             }
-                        }, (error) => {
-                            console.error("클라우드 연결 에러:", error);
+                        }, (err) => {
+                            console.error("Firebase Error:", err);
+                            statusLabel.innerText = "❌ 권한 오류 (클릭해서 해결법 보기)";
+                            statusLabel.className = "mb-6 text-center py-1.5 rounded-full text-[11px] font-black uppercase bg-red-100 text-red-600 max-w-[240px] mx-auto border border-red-200 shadow-sm cursor-pointer animate-pulse";
+                            // 권한 오류 시 클릭하면 해결법 안내
+                            statusLabel.onclick = () => alert("파이어베이스 권한(Rules) 오류입니다!\n\nFirebase 콘솔 -> Firestore Database -> [Rules] 탭으로 이동해서 아래처럼 코드를 수정하고 [게시]를 눌러주세요.\n\nmatch /{document=**} {\n  allow read, write: if true;\n}");
                         });
+                    } else {
+                        try {
+                            await signInAnonymously(auth);
+                        } catch(authErr) {
+                            console.error("Auth Error:", authErr);
+                            statusLabel.innerText = "❌ 익명 로그인 오류 (Auth 설정 필요)";
+                            statusLabel.className = "mb-6 text-center py-1.5 rounded-full text-[11px] font-black uppercase bg-red-100 text-red-600 max-w-[240px] mx-auto border border-red-200 shadow-sm";
+                        }
                     }
                 });
-            } catch(e) {
-                console.error("Storage 초기화 실패:", e);
-                initializeAppUI();
+            } catch (e) {
+                console.error("Init Error:", e);
+                statusLabel.innerText = "🚨 초기화 실패 (코드 확인)";
+                statusLabel.className = "mb-6 text-center py-1.5 rounded-full text-[11px] font-black uppercase bg-red-100 text-red-600 max-w-[240px] mx-auto border border-red-200 shadow-sm";
             }
         }
 
-        window.saveStateToCloud = async function(silent = false) {
+        window.save = async function(silent = false) {
             if (!docRef || isCloudSyncing) return;
             try {
-                // 저장할 핵심 데이터만 추출
-                const saveData = {
+                await setDoc(docRef, {
                     members: window.state.members,
                     rounds: window.state.rounds,
                     currentRoundId: window.state.currentRoundId
-                };
-                await setDoc(docRef, saveData);
-                if(!silent) showToast("☁️ 클라우드에 실시간 저장됨");
-            } catch(e) {
-                console.error("상태 저장 실패:", e);
-            }
+                });
+                if(!silent) showToast("서버와 동기화되었습니다.");
+            } catch (e) { console.error("Save Error:", e); }
         }
 
-        // --- 바닐라 자바스크립트 로직 ---
-        window.onload = initStorage;
-
-        function initializeAppUI() {
-            ensureData(); renderAvatars(); renderMembersList(); renderRoundSelector();
+        // --- 기능 로직 ---
+        window.onload = init;
+        window.switchTab = function(t) {
+            window.state.activeTab = t;
+            ['members','books','roulette','status'].forEach(x => {
+                const btn = document.getElementById(`btn-tab-${x}`);
+                btn.className = `flex-1 flex flex-col items-center justify-center py-2.5 rounded-xl text-[13px] font-bold transition-all ${x===t ? 'tab-active' : 'tab-inactive'}`;
+                document.getElementById(`tab-${x}`).classList.toggle('hidden', x!==t);
+            });
+            document.getElementById('round-selector-wrapper').classList.toggle('hidden', t==='members');
+            refreshAll();
         }
 
-        window.refreshAllUI = function() {
-            ensureData();
+        function refreshAll() {
+            ensure();
             renderRoundSelector();
             if(window.state.activeTab === 'members') { renderAvatars(); renderMembersList(); }
-            if(window.state.activeTab === 'books') renderBooksTab();
-            if(window.state.activeTab === 'roulette') drawWheel();
-            if(window.state.activeTab === 'status') renderStatusTab();
+            else if(window.state.activeTab === 'books') renderBooks();
+            else if(window.state.activeTab === 'roulette') draw();
+            else if(window.state.activeTab === 'status') renderStatus();
         }
 
-        function getCurrentRound() {
-            return window.state.rounds.find(r => r.id === window.state.currentRoundId) || window.state.rounds[0];
-        }
-
-        function ensureData() {
-            const round = getCurrentRound();
-            if(!round.proposals) round.proposals = {};
-            if(!round.assignments) round.assignments = {};
+        function ensure() {
+            const r = window.state.rounds.find(x => x.id === window.state.currentRoundId) || window.state.rounds[0];
+            if(!r.proposals) r.proposals = {}; if(!r.assignments) r.assignments = {};
             window.state.members.forEach(m => {
-                if (!round.proposals[m.id]) round.proposals[m.id] = ['', '', '', ''];
-                if (!round.assignments[m.id]) round.assignments[m.id] = { bookTitle: '', progress: 0 };
+                if(!r.proposals[m.id]) r.proposals[m.id] = ['', '', '', ''];
+                if(!r.assignments[m.id]) r.assignments[m.id] = { bookTitle: '', progress: 0 };
             });
         }
 
-        window.showToast = function(msg) {
-            const toast = document.getElementById('toast-msg');
-            document.getElementById('toast-text').innerText = msg;
-            toast.classList.remove('hidden'); toast.classList.add('flex');
-            toast.style.animation = 'none'; toast.offsetHeight; toast.style.animation = null; 
-            if(window.state.toastTimer) clearTimeout(window.state.toastTimer);
-            window.state.toastTimer = setTimeout(() => {
-                toast.classList.add('hidden'); toast.classList.remove('flex');
-            }, 3000);
+        window.showToast = function(m) {
+            const t = document.getElementById('toast-msg'); document.getElementById('toast-text').innerText = m;
+            t.classList.remove('hidden'); t.classList.add('flex'); setTimeout(() => t.classList.add('hidden'), 2500);
         }
-
-        window.switchTab = function(tabId) {
-            window.state.activeTab = tabId;
-            ['members', 'books', 'roulette', 'status'].forEach(id => {
-                const btn = document.getElementById(`btn-tab-${id}`);
-                const content = document.getElementById(`tab-${id}`);
-                if(id === tabId) {
-                    btn.className = "flex-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-xl text-[13px] font-bold transition-all duration-200 bg-white text-pink-600 shadow-sm scale-[1.02]";
-                    content.classList.remove('hidden');
-                } else {
-                    btn.className = "flex-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-xl text-[13px] font-bold transition-all duration-200 text-gray-500 hover:text-gray-800";
-                    content.classList.add('hidden');
-                }
-            });
-            document.getElementById('round-selector-wrapper').classList.toggle('hidden', tabId === 'members');
-            refreshAllUI();
-        };
 
         function renderRoundSelector() {
             const select = document.getElementById('round-select');
@@ -345,277 +251,120 @@
             select.value = window.state.currentRoundId;
         }
 
-        window.changeRound = function(val) {
-            window.state.currentRoundId = Number(val);
-            saveStateToCloud(true);
-            refreshAllUI();
-        };
-
-        window.addRound = function() {
-            const newId = window.state.rounds.length > 0 ? Math.max(...window.state.rounds.map(r => r.id)) + 1 : 1;
-            window.state.rounds.push({ id: newId, startDate: '', endDate: '', proposals: {}, assignments: {}, spinCount: 0, selectedBooks: [] });
-            window.state.currentRoundId = newId;
-            saveStateToCloud(true);
-            refreshAllUI();
-            showToast(`${newId}회차가 추가되었습니다.`);
-        };
+        window.changeRound = (v) => { window.state.currentRoundId = Number(v); save(true); refreshAll(); }
+        window.addRound = () => {
+            const id = Math.max(...window.state.rounds.map(x=>x.id)) + 1;
+            window.state.rounds.push({ id, startDate:'', endDate:'', proposals:{}, assignments:{}, spinCount:0, selectedBooks:[] });
+            window.state.currentRoundId = id; save(true); refreshAll();
+            showToast(`${id}회차가 시작되었습니다!`);
+        }
 
         function renderAvatars() {
-            document.getElementById('avatar-list').innerHTML = AVATARS.map(avatar => `
-                <button onclick="selectAvatar('${avatar}')" class="text-3xl p-2 rounded-2xl transition-all flex-shrink-0 ${window.state.selectedAvatar === avatar ? 'bg-pink-100 ring-2 ring-pink-400 scale-110' : 'bg-gray-50 hover:bg-gray-100 opacity-60 hover:opacity-100'}">
-                    ${avatar}
-                </button>
+            document.getElementById('avatar-list').innerHTML = AVATARS.map(a => `
+                <button onclick="window.state.selectedAvatar='${a}';refreshAll();" class="text-3xl p-3 rounded-2xl transition-all ${window.state.selectedAvatar===a?'bg-pink-100 ring-4 ring-pink-400 transform scale-110 shadow-lg shadow-pink-100':'bg-gray-50 opacity-60 hover:opacity-100'}">${a}</button>
             `).join('');
         }
 
-        window.selectAvatar = function(avatar) { window.state.selectedAvatar = avatar; renderAvatars(); };
+        window.addMember = () => {
+            const n = document.getElementById('new-member-name').value.trim(); if(!n) return;
+            window.state.members.push({ id: Date.now().toString(), name: n, avatar: window.state.selectedAvatar });
+            document.getElementById('new-member-name').value = '';
+            window.state.selectedAvatar = AVATARS[Math.floor(Math.random()*AVATARS.length)];
+            save(true); refreshAll();
+        }
 
-        window.addMember = function() {
-            const input = document.getElementById('new-member-name');
-            const name = input.value.trim();
-            if(!name) { showToast('이름을 입력해주세요!'); return; }
-            window.state.members.push({ id: Date.now().toString(), name, avatar: window.state.selectedAvatar });
-            input.value = ''; window.state.selectedAvatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
-            saveStateToCloud(true); refreshAllUI();
-        };
-
-        window.removeMember = function(id) {
-            window.state.members = window.state.members.filter(m => m.id !== id);
-            saveStateToCloud(true); refreshAllUI();
-        };
+        window.removeMember = (id) => { window.state.members = window.state.members.filter(x=>x.id!==id); save(true); refreshAll(); }
 
         function renderMembersList() {
             const container = document.getElementById('member-list');
             document.getElementById('member-count').innerText = window.state.members.length;
-            if(window.state.members.length === 0) {
-                container.innerHTML = `<div class="col-span-1 sm:col-span-2 text-center text-gray-400 py-12 bg-white rounded-2xl border-2 border-dashed border-gray-200 font-medium"><i class="fa-solid fa-user-slash text-[32px] mb-3 block text-gray-300"></i> 아직 등록된 멤버가 없어요.</div>`;
-                return;
-            }
             container.innerHTML = window.state.members.map(m => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:border-pink-200 transition-colors">
-                    <div class="flex items-center gap-4">
-                        <div class="bg-gray-50 rounded-xl p-2 text-3xl shadow-sm">${m.avatar}</div>
-                        <span class="font-bold text-gray-800 text-lg truncate max-w-[120px]">${m.name}</span>
-                    </div>
-                    <button onclick="removeMember('${m.id}')" class="text-gray-300 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50">
-                        <i class="fa-solid fa-trash-can text-[18px]"></i>
-                    </button>
+                <div class="bg-white p-4 rounded-3xl border border-gray-100 flex justify-between items-center font-bold shadow-sm transition-all hover:shadow-md">
+                    <div class="flex items-center gap-4"><div class="bg-gray-50 rounded-2xl p-2 text-2xl">${m.avatar}</div><span class="text-gray-700">${m.name}</span></div>
+                    <button onclick="removeMember('${m.id}')" class="text-gray-300 hover:text-red-500 p-2"><i class="fa-solid fa-trash-can"></i></button>
                 </div>
             `).join('');
         }
 
-        function renderBooksTab() {
-            const container = document.getElementById('books-list');
-            const round = getCurrentRound();
-            let html = '';
-            window.state.members.forEach(m => {
-                const props = round.proposals[m.id] || ['', '', '', ''];
-                html += `<div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                    <div class="flex items-center gap-3 mb-5 pb-4 border-b border-gray-100">
-                        <span class="text-3xl bg-pink-50 p-2 rounded-xl">${m.avatar}</span>
-                        <h3 class="font-extrabold text-lg text-gray-800">${m.name}의 희망 도서</h3>
-                    </div><div class="space-y-3">`;
-                for(let i=0; i<4; i++) {
-                    // 데이터 최적화를 위해 onchange (입력 완료 시점)에만 서버 저장 수행
-                    html += `<div class="flex items-center gap-3 relative">
-                        <span class="text-gray-400 font-black w-4 text-center text-sm">${i+1}</span>
-                        <input type="text" onchange="updateBook('${m.id}', ${i}, this.value)" value="${props[i]}" placeholder="도서명 입력 (입력 후 바깥 터치)" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-300 transition-all">
-                    </div>`;
-                }
-                html += `</div></div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        window.updateBook = function(mId, idx, val) {
-            getCurrentRound().proposals[mId][idx] = val;
-            saveStateToCloud(); // 값이 확정되었을 때 서버에 저장
-        };
-
-        function getAllProposedBooks() {
-            const round = getCurrentRound(); let books = [];
-            for (let mId in round.proposals) { books.push(...round.proposals[mId]); }
-            return books.filter(b => b && b.trim() !== '');
-        }
-
-        window.drawWheel = function(rotation = 0) {
-            const canvas = document.getElementById('roulette-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const cw = canvas.width; const ch = canvas.height;
-            const cx = cw / 2; const cy = ch / 2;
-            const radius = Math.min(cx, cy) - 15;
-
-            ctx.clearRect(0, 0, cw, ch);
-            const books = getAllProposedBooks();
-            const spinLeft = Math.max(0, 3 - getCurrentRound().spinCount);
-            
-            document.getElementById('roulette-book-count').innerText = books.length;
-            document.getElementById('roulette-spin-left').innerText = spinLeft;
-
-            const btn = document.getElementById('btn-spin');
-            if(window.state.isSpinning || spinLeft === 0 || books.length === 0) {
-                btn.className = "w-full py-4 mt-4 rounded-2xl font-extrabold text-lg text-white shadow-xl transition-all duration-300 bg-gray-300 cursor-not-allowed text-gray-500 shadow-none";
-                if(!window.state.isSpinning) document.getElementById('btn-spin-content').innerHTML = spinLeft === 0 ? `<i class="fa-solid fa-lock mr-2"></i>돌림판 마감` : `<i class="fa-solid fa-dice-d20 mr-2"></i>돌림판 돌리기!`;
-            } else {
-                btn.className = "w-full py-4 mt-4 rounded-2xl font-extrabold text-lg text-white shadow-xl transition-all duration-300 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:scale-[1.02] active:scale-[0.98]";
-                document.getElementById('btn-spin-content').innerHTML = `<i class="fa-solid fa-dice-d20 mr-2"></i>돌림판 돌리기!`;
-            }
-
-            if (books.length === 0) {
-                ctx.fillStyle = '#f3f4f6'; ctx.beginPath(); ctx.arc(cx, cy, radius, 0, 2 * Math.PI); ctx.fill();
-                ctx.fillStyle = '#9ca3af'; ctx.font = 'bold 16px Pretendard, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText('등록된 책이 없습니다', cx, cy); return;
-            }
-
-            const sliceAngle = (2 * Math.PI) / books.length;
-            books.forEach((book, i) => {
-                const angle = rotation + i * sliceAngle;
-                ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, radius, angle, angle + sliceAngle); ctx.closePath();
-                ctx.fillStyle = COLORS[i % COLORS.length]; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#ffffff'; ctx.stroke();
-
-                ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle + sliceAngle / 2); ctx.textAlign = 'right'; ctx.fillStyle = '#1f2937'; ctx.font = 'bold 15px Pretendard, sans-serif';
-                let displayText = book.length > 9 ? book.substring(0, 8) + '..' : book; ctx.fillText(displayText, radius - 25, 5); ctx.restore();
-            });
-
-            ctx.beginPath(); ctx.arc(cx, cy, 22, 0, 2 * Math.PI); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = '#e5e7eb'; ctx.stroke();
-            ctx.beginPath(); ctx.arc(cx, cy, 8, 0, 2 * Math.PI); ctx.fillStyle = '#d1d5db'; ctx.fill();
-            ctx.beginPath(); ctx.moveTo(cx, cy - radius + 10); ctx.lineTo(cx - 15, cy - radius - 20); ctx.lineTo(cx + 15, cy - radius - 20); ctx.closePath();
-            ctx.fillStyle = '#ec4899'; ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 5; ctx.shadowOffsetY = 2; ctx.fill(); ctx.shadowColor = 'transparent';
-        }
-
-        window.spinWheel = function() {
-            const books = getAllProposedBooks();
-            if (window.state.isSpinning || getCurrentRound().spinCount >= 3 || books.length === 0) return;
-
-            window.state.isSpinning = true;
-            document.getElementById('roulette-result').classList.add('hidden');
-            getCurrentRound().spinCount++;
-            saveStateToCloud(true); // 스핀 횟수 동기화
-            drawWheel(); 
-            
-            document.getElementById('btn-spin-content').innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i>운명의 책 고르는 중...`;
-
-            const spinDuration = 3500;
-            const startRotation = Math.random() * Math.PI * 2;
-            const targetRotation = startRotation + Math.PI * 2 * 12 + (Math.random() * Math.PI * 2);
-            const startTime = performance.now();
-
-            const animate = (currentTime) => {
-                const progress = Math.min((currentTime - startTime) / spinDuration, 1);
-                const easeProgress = 1 - Math.pow(1 - progress, 4);
-                const currentRotation = startRotation + (targetRotation - startRotation) * easeProgress;
-                drawWheel(currentRotation);
-
-                if (progress < 1) { requestAnimationFrame(animate); } 
-                else {
-                    window.state.isSpinning = false;
-                    const normalizedRotation = currentRotation % (2 * Math.PI);
-                    const sliceAngle = (2 * Math.PI) / books.length;
-                    const offset = (Math.PI * 1.5 - normalizedRotation + Math.PI * 4) % (2 * Math.PI);
-                    const winningIndex = Math.floor(offset / sliceAngle);
-                    
-                    const selected = books[winningIndex];
-                    if (!getCurrentRound().selectedBooks.includes(selected)) {
-                        getCurrentRound().selectedBooks.push(selected);
-                    }
-                    
-                    drawWheel(currentRotation);
-                    document.getElementById('result-book-name').innerText = `"${selected}"`;
-                    document.getElementById('roulette-result').classList.remove('hidden');
-                    saveStateToCloud(); // 결과 뽑힌 것 서버 저장
-                }
-            };
-            requestAnimationFrame(animate);
-        };
-
-        function getAvailableBooks() {
-            const proposals = getAllProposedBooks();
-            const selected = getCurrentRound().selectedBooks || [];
-            return [...new Set([...proposals, ...selected])];
-        }
-
-        window.updateDate = function(field, val) { 
-            getCurrentRound()[field] = val; 
-            saveStateToCloud();
-        };
-
-        function renderStatusTab() {
-            const container = document.getElementById('status-list');
-            const round = getCurrentRound();
-            
-            document.getElementById('date-start').value = round.startDate;
-            document.getElementById('date-end').value = round.endDate;
-
-            if(window.state.members.length === 0) {
-                container.innerHTML = `<div class="text-center text-gray-400 py-10 bg-white rounded-2xl border-2 border-dashed border-gray-200 font-medium"><i class="fa-solid fa-users-rays text-[32px] mb-3 block text-gray-300"></i> 먼저 멤버를 추가해주세요.</div>`;
-                return;
-            }
-
-            const availBooks = getAvailableBooks();
-            let html = '';
-            window.state.members.forEach(m => {
-                const assign = round.assignments[m.id];
-                const isComplete = assign.progress == 100;
-                
-                html += `
-                <div class="p-5 rounded-2xl shadow-sm border-2 transition-all duration-500 ${isComplete ? 'border-green-400 bg-green-50/30' : 'border-transparent hover:border-pink-100 bg-white'}">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="flex items-center gap-4 w-full">
-                            <div class="relative shrink-0">
-                                <div class="text-4xl p-2.5 rounded-2xl shadow-sm ${isComplete ? 'bg-green-100' : 'bg-pink-50'}">${m.avatar}</div>
-                                ${isComplete ? `<div class="absolute -bottom-2 -right-2 text-white bg-green-500 rounded-full w-6 h-6 flex items-center justify-center border-2 border-white shadow-sm"><i class="fa-solid fa-check text-[12px]"></i></div>` : ''}
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="font-extrabold text-gray-800 flex items-center gap-2 text-lg">
-                                    <span class="truncate">${m.name}</span>
-                                    ${assign.bookTitle && !isComplete ? `<span class="px-2 py-0.5 bg-pink-100 text-pink-700 text-[10px] rounded-md font-black uppercase tracking-wide shrink-0">읽는중</span>` : ''}
-                                </h3>
-                                <div class="mt-2 relative">
-                                    <select onchange="updateAssign('${m.id}', this.value)" class="w-full ${isComplete ? 'bg-green-50/50' : 'bg-gray-50'} border border-gray-200 text-gray-700 text-sm font-medium rounded-lg py-2 pl-3 pr-8 outline-none focus:ring-2 focus:ring-pink-300 appearance-none cursor-pointer">
-                                        <option value="" class="text-gray-400">책 배정하기 (선택)</option>
-                                        ${availBooks.map(b => `<option value="${b}" ${assign.bookTitle === b ? 'selected' : ''}>${b}</option>`).join('')}
-                                    </select>
-                                    <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-gray-400 pointer-events-none text-[12px]"></i>
-                                </div>
-                            </div>
-                            ${assign.bookTitle ? `
-                            <div class="flex flex-col items-end shrink-0 ml-2">
-                                <span id="prog-text-${m.id}" class="font-black text-3xl tracking-tighter ${isComplete ? 'text-green-500' : 'text-pink-500'}">${assign.progress}<span class="text-lg">%</span></span>
-                            </div>` : ''}
-                        </div>
+        function renderBooks() {
+            const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
+            document.getElementById('books-list').innerHTML = window.state.members.map(m => {
+                const p = r.proposals[m.id] || ['', '', '', ''];
+                return `
+                <div class="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><span class="text-2xl">${m.avatar}</span> ${m.name}</h3>
+                    <div class="space-y-2">
+                        ${p.map((x,i)=>`<input type="text" onchange="window.state.rounds.find(r=>r.id===${r.id}).proposals['${m.id}'][${i}]=this.value;save();" value="${x}" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-3.5 text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-100 focus:bg-white transition-all" placeholder="책 제목을 입력하세요">`).join('')}
                     </div>
-                    ${assign.bookTitle ? `
-                    <div class="mt-5 relative pt-1">
-                        <input type="range" min="0" max="100" value="${assign.progress}" oninput="updateProgUI('${m.id}', this.value)" onchange="saveProg('${m.id}', this.value)">
-                        <div class="w-full bg-gray-100 rounded-full h-3 mt-2 overflow-hidden shadow-inner relative">
-                            <div id="prog-bar-${m.id}" class="h-full rounded-full transition-all duration-300 ease-out absolute top-0 left-0 ${isComplete ? 'bg-green-500' : 'bg-gradient-to-r from-pink-400 to-purple-500'}" style="width: ${assign.progress}%"></div>
-                        </div>
-                    </div>` : ''}
                 </div>`;
-            });
-            container.innerHTML = html;
+            }).join('');
         }
 
-        window.updateAssign = function(mId, val) {
-            getCurrentRound().assignments[mId].bookTitle = val;
-            if(!val) getCurrentRound().assignments[mId].progress = 0;
-            saveStateToCloud(true);
-            renderStatusTab();
-        };
+        function draw(rot=0) {
+            const c = document.getElementById('roulette-canvas'); if(!c) return;
+            const ctx = c.getContext('2d');
+            const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
+            let books = []; Object.values(r.proposals).forEach(x=>books.push(...x)); books = books.filter(x=>x.trim());
+            document.getElementById('roulette-book-count').innerText = books.length;
+            document.getElementById('roulette-spin-left').innerText = 3-r.spinCount;
+            ctx.clearRect(0,0,340,340);
+            if(!books.length) { ctx.fillStyle='#f3f4f6'; ctx.beginPath(); ctx.arc(170,170,150,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#9ca3af'; ctx.font='bold 16px Pretendard'; ctx.textAlign='center'; ctx.fillText('책을 등록해주세요', 170, 175); return; }
+            const ang = (Math.PI*2)/books.length;
+            books.forEach((b,i)=>{
+                const a = rot + i*ang; ctx.beginPath(); ctx.moveTo(170,170); ctx.arc(170,170,150,a,a+ang); ctx.fillStyle=COLORS[i%COLORS.length]; ctx.fill(); ctx.lineWidth=3; ctx.strokeStyle='#fff'; ctx.stroke();
+                ctx.save(); ctx.translate(170,170); ctx.rotate(a+ang/2); ctx.textAlign='right'; ctx.fillStyle='#1f2937'; ctx.font='bold 15px Pretendard'; ctx.fillText(b.substring(0,8), 140, 5); ctx.restore();
+            });
+            ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.moveTo(170,25); ctx.lineTo(155,5); ctx.lineTo(185,5); ctx.fill();
+        }
 
-        window.updateProgUI = function(mId, val) {
-            const textEl = document.getElementById(`prog-text-${mId}`);
-            const barEl = document.getElementById(`prog-bar-${mId}`);
-            if(textEl) textEl.innerHTML = `${val}<span class="text-lg">%</span>`;
-            if(barEl) barEl.style.width = `${val}%`;
-        };
+        window.spinWheel = () => {
+            const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
+            let books = []; Object.values(r.proposals).forEach(x=>books.push(...x)); books = books.filter(x=>x.trim());
+            if(window.state.isSpinning || r.spinCount>=3 || !books.length) return;
+            window.state.isSpinning=true; r.spinCount++; save(true);
+            let curRot = 0; const target = Math.random()*Math.PI*2 + Math.PI*28; const start = performance.now();
+            function ani(time){
+                const prog = Math.min((time-start)/3500, 1); const ease = 1-Math.pow(1-prog,5); curRot = target*ease; draw(curRot);
+                if(prog<1) requestAnimationFrame(ani);
+                else {
+                    window.state.isSpinning=false; const off = (Math.PI*1.5 - (curRot%(Math.PI*2)) + Math.PI*4)%(Math.PI*2);
+                    const sel = books[Math.floor(off/((Math.PI*2)/books.length))];
+                    if(!r.selectedBooks.includes(sel)) r.selectedBooks.push(sel);
+                    document.getElementById('result-book-name').innerText = sel; document.getElementById('roulette-result').classList.remove('hidden');
+                    save(); refreshAll();
+                }
+            }
+            requestAnimationFrame(ani);
+        }
 
-        window.saveProg = function(mId, val) {
-            getCurrentRound().assignments[mId].progress = Number(val);
-            saveStateToCloud(); 
-            renderStatusTab(); 
-        };
+        window.updateDate = (f,v) => { window.state.rounds.find(x=>x.id===window.state.currentRoundId)[f]=v; save(); }
+
+        function renderStatus() {
+            const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
+            let books = []; Object.values(r.proposals).forEach(x=>books.push(...x)); books = [...new Set([...books.filter(x=>x.trim()), ...r.selectedBooks])];
+            document.getElementById('date-start').value = r.startDate; document.getElementById('date-end').value = r.endDate;
+            document.getElementById('status-list').innerHTML = window.state.members.map(m => {
+                const a = r.assignments[m.id];
+                const isComplete = a.progress == 100;
+                return `
+                <div class="bg-white p-5 rounded-3xl border shadow-sm transition-all duration-500 ${isComplete?'border-green-400 bg-green-50 shadow-green-100':'border-gray-100'}">
+                    <div class="flex justify-between items-center font-black mb-4"><div class="flex items-center gap-3"><span class="text-3xl">${m.avatar}</span> <span class="text-gray-800">${m.name}</span></div><span class="${isComplete?'text-green-600':'text-pink-600'} text-xl tracking-tighter">${a.progress}%</span></div>
+                    <div class="relative mb-4">
+                        <select onchange="window.state.rounds.find(x=>x.id===${r.id}).assignments['${m.id}'].bookTitle=this.value;save();refreshAll();" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-3 text-sm font-bold appearance-none outline-none focus:ring-4 focus:ring-pink-100">
+                            <option value="">읽을 책을 골라주세요</option>${books.map(b=>`<option value="${b}" ${a.bookTitle===b?'selected':''}>${b}</option>`).join('')}
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                    </div>
+                    ${a.bookTitle?`
+                    <div class="mt-2">
+                        <input type="range" min="0" max="100" value="${a.progress}" onchange="window.state.rounds.find(x=>x.id===${r.id}).assignments['${m.id}'].progress=Number(this.value);save();refreshAll();" class="w-full accent-pink-500 cursor-pointer">
+                        <div class="h-2 w-full bg-gray-100 rounded-full mt-2 overflow-hidden shadow-inner">
+                            <div class="h-full ${isComplete?'bg-green-500':'bg-gradient-to-r from-pink-400 to-purple-500'} transition-all duration-300" style="width: ${a.progress}%"></div>
+                        </div>
+                    </div>`:''}
+                </div>`;
+            }).join('');
+        }
     </script>
 </body>
 </html>
