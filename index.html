@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Users, BookOpen, Dices, BarChart2, Plus, Trash2, Calendar, CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import { 
+  Users, BookOpen, Dices, BarChart2, Plus, Trash2, Calendar, 
+  CheckCircle2, AlertCircle, Info, ChevronDown, UserPlus, 
+  UserMinus, CalendarDays, Lock, Loader2
+} from 'lucide-react';
 
 // --- 상수 정의 ---
 const AVATARS = ['🐰', '🐻', '🦊', '🐼', '🐱', '🐶', '🐯', '🐸', '🐹', '🐨'];
@@ -21,7 +25,7 @@ export default function App() {
       id: 1,
       startDate: '',
       endDate: '',
-      proposals: { '1': ['', ''], '2': ['', ''] }, // 초기화
+      proposals: { '1': ['', ''], '2': ['', ''] },
       assignments: {},
       spinCount: 0,
       selectedBooks: []
@@ -30,18 +34,15 @@ export default function App() {
   
   const [currentRoundId, setCurrentRoundId] = useState(1);
 
-  // 연산 최적화 (해당 값이 바뀔 때만 재계산)
   const currentRound = useMemo(() => 
     rounds.find(r => r.id === currentRoundId) || rounds[0], 
   [rounds, currentRoundId]);
 
-  // 토스트 메시지 띄우기 함수
   const showToast = useCallback((msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   }, []);
 
-  // 새 회차 추가 (useCallback으로 최적화)
   const addRound = useCallback(() => {
     setRounds(prev => {
       const newId = prev.length > 0 ? Math.max(...prev.map(r => r.id)) + 1 : 1;
@@ -53,39 +54,41 @@ export default function App() {
   }, [showToast]);
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 pb-20 relative">
+    <div className="min-h-screen bg-gray-50 text-gray-800 pb-20 relative font-sans">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-2 animate-bounce">
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-bounce">
           <Info size={18} />
-          <span className="font-medium">{toastMessage}</span>
+          <span className="font-medium whitespace-nowrap">{toastMessage}</span>
         </div>
       )}
 
       {/* Header */}
-      <header className="bg-white shadow-sm pt-8 pb-4 px-6 sticky top-0 z-10">
-        <h1 className="text-3xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 mb-6">
-          🎲 돌려돌려 교독깡!
-        </h1>
-        
-        {/* Navigation Tabs */}
-        <div className="flex justify-between items-center bg-gray-100 rounded-2xl p-1">
-          <TabButton id="members" icon={<Users size={18} />} label="멤버" activeTab={activeTab} onClick={setActiveTab} />
-          <TabButton id="books" icon={<BookOpen size={18} />} label="책 등록" activeTab={activeTab} onClick={setActiveTab} />
-          <TabButton id="roulette" icon={<Dices size={18} />} label="돌림판" activeTab={activeTab} onClick={setActiveTab} />
-          <TabButton id="status" icon={<BarChart2 size={18} />} label="현황" activeTab={activeTab} onClick={setActiveTab} />
+      <header className="bg-white shadow-sm pt-8 pb-4 px-4 sticky top-0 z-10 w-full">
+        <div className="max-w-2xl mx-auto">
+          <h1 className="text-3xl font-extrabold text-center text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 mb-6 tracking-tight">
+            🎲 돌려돌려 교독깡!
+          </h1>
+          
+          {/* Navigation Tabs */}
+          <div className="flex justify-between items-center bg-gray-100 rounded-2xl p-1.5 shadow-inner">
+            <TabButton id="members" icon={<Users size={18}/>} label="멤버" activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton id="books" icon={<BookOpen size={18}/>} label="책 등록" activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton id="roulette" icon={<Dices size={18}/>} label="돌림판" activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton id="status" icon={<BarChart2 size={18}/>} label="현황" activeTab={activeTab} onClick={setActiveTab} />
+          </div>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="p-6 max-w-2xl mx-auto">
+      <main className="p-4 max-w-2xl mx-auto">
         {/* 회차 선택기 */}
         {activeTab !== 'members' && (
-          <div className="mb-6 flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-gray-100 transition-all">
-            <span className="font-semibold text-gray-700">현재 회차</span>
-            <div className="flex gap-2 w-2/3">
+          <div className="mb-6 flex items-center justify-between bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+            <span className="font-bold text-gray-700 ml-1">현재 진행 회차</span>
+            <div className="flex gap-2 w-[60%] sm:w-1/2">
               <select 
-                className="bg-gray-50 border border-gray-200 text-gray-700 rounded-lg focus:ring-pink-500 focus:border-pink-500 block w-full p-2 outline-none"
+                className="bg-gray-50 border border-gray-200 text-gray-700 font-medium rounded-lg focus:ring-2 focus:ring-pink-400 block w-full p-2 outline-none cursor-pointer"
                 value={currentRoundId}
                 onChange={(e) => setCurrentRoundId(Number(e.target.value))}
               >
@@ -93,15 +96,15 @@ export default function App() {
                   <option key={r.id} value={r.id}>{r.id}회차 교환독서</option>
                 ))}
               </select>
-              <button onClick={addRound} className="bg-pink-100 text-pink-600 p-2 rounded-lg hover:bg-pink-200 transition-colors">
-                <Plus size={20} />
+              <button onClick={addRound} className="bg-pink-100 text-pink-600 p-2 rounded-lg hover:bg-pink-200 transition-colors shadow-sm flex-shrink-0">
+                <Plus size={18} />
               </button>
             </div>
           </div>
         )}
 
         {/* Tab Contents */}
-        <div className="transition-opacity duration-300">
+        <div className="animate-[fadeIn_0.3s_ease-out_forwards]">
           {activeTab === 'members' && <MembersTab members={members} setMembers={setMembers} showToast={showToast} />}
           {activeTab === 'books' && <BooksTab currentRound={currentRound} members={members} setRounds={setRounds} />}
           {activeTab === 'roulette' && <RouletteTab currentRound={currentRound} setRounds={setRounds} showToast={showToast} />}
@@ -120,18 +123,18 @@ const TabButton = React.memo(({ id, icon, label, activeTab, onClick }) => {
   return (
     <button
       onClick={() => onClick(id)}
-      className={`flex-1 flex flex-col items-center justify-center py-2 px-1 rounded-xl text-sm font-medium transition-all duration-200 ${
-        isActive ? 'bg-white text-pink-600 shadow-sm transform scale-105' : 'text-gray-500 hover:text-gray-700'
+      className={`flex-1 flex flex-col items-center justify-center py-2.5 px-1 rounded-xl text-[13px] font-bold transition-all duration-200 ${
+        isActive ? 'bg-white text-pink-600 shadow-sm transform scale-[1.02]' : 'text-gray-500 hover:text-gray-800'
       }`}
     >
-      <div className="mb-1">{icon}</div>
+      <div className="mb-1.5">{icon}</div>
       <span>{label}</span>
     </button>
   );
 });
 
 // ---------------------------------------------------------
-// 1. 멤버 탭 (React.memo 로 리렌더링 방지)
+// 1. 멤버 탭
 // ---------------------------------------------------------
 const MembersTab = React.memo(({ members, setMembers, showToast }) => {
   const [newName, setNewName] = useState('');
@@ -154,54 +157,63 @@ const MembersTab = React.memo(({ members, setMembers, showToast }) => {
   }, [setMembers]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-          <Users size={20} className="text-pink-500" /> 멤버 추가
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-800">
+          <UserPlus className="text-pink-500" size={20} /> 멤버 추가하기
         </h2>
-        <div className="flex gap-3 mb-4 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
-          {AVATARS.map(avatar => (
-            <button
-              key={avatar}
-              onClick={() => setSelectedAvatar(avatar)}
-              className={`text-3xl p-2 rounded-full transition-all flex-shrink-0 ${selectedAvatar === avatar ? 'bg-pink-100 ring-2 ring-pink-400 transform scale-110' : 'bg-gray-50 opacity-60 hover:opacity-100'}`}
-            >
-              {avatar}
-            </button>
-          ))}
+        
+        <div className="mb-4">
+          <label className="text-xs text-gray-500 font-semibold mb-2 block ml-1">아바타 선택</label>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {AVATARS.map(avatar => (
+              <button
+                key={avatar}
+                onClick={() => setSelectedAvatar(avatar)}
+                className={`text-3xl p-2 rounded-2xl transition-all flex-shrink-0 ${selectedAvatar === avatar ? 'bg-pink-100 ring-2 ring-pink-400 transform scale-110' : 'bg-gray-50 hover:bg-gray-100 opacity-60 hover:opacity-100'}`}
+              >
+                {avatar}
+              </button>
+            ))}
+          </div>
         </div>
+
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="이름 입력 후 엔터"
-            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-pink-300 transition-all"
+            placeholder="이름(닉네임) 입력 후 엔터"
+            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-pink-300 transition-all font-medium placeholder-gray-400"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addMember()}
           />
-          <button onClick={addMember} className="bg-pink-500 text-white px-5 rounded-xl font-bold hover:bg-pink-600 transition-colors active:scale-95">
-            추가
+          <button onClick={addMember} className="bg-pink-500 text-white px-5 rounded-xl font-bold hover:bg-pink-600 transition-colors active:scale-95 shadow-sm">
+            등록
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {members.map(member => (
-          <div key={member.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3">
-              <span className="text-4xl">{member.avatar}</span>
-              <span className="font-bold text-gray-700 truncate max-w-[80px]">{member.name}</span>
+      <div>
+        <h3 className="text-sm font-bold text-gray-500 mb-3 ml-2 uppercase tracking-wider">참여 중인 멤버 ({members.length})</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {members.map(member => (
+            <div key={member.id} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between hover:border-pink-200 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="bg-gray-50 rounded-xl p-2 text-3xl shadow-sm">{member.avatar}</div>
+                <span className="font-bold text-gray-800 text-lg truncate max-w-[120px]">{member.name}</span>
+              </div>
+              <button onClick={() => removeMember(member.id)} className="text-gray-300 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50">
+                <Trash2 size={18} />
+              </button>
             </div>
-            <button onClick={() => removeMember(member.id)} className="text-gray-300 hover:text-red-500 transition-colors p-1">
-              <Trash2 size={18} />
-            </button>
-          </div>
-        ))}
-        {members.length === 0 && (
-          <div className="col-span-2 text-center text-gray-400 py-10 bg-white rounded-2xl border border-dashed border-gray-200">
-            등록된 멤버가 없습니다.
-          </div>
-        )}
+          ))}
+          {members.length === 0 && (
+            <div className="col-span-1 sm:col-span-2 text-center text-gray-400 py-12 bg-white rounded-2xl border-2 border-dashed border-gray-200 font-medium">
+              <UserMinus size={32} className="mb-3 text-gray-300 mx-auto" />
+              아직 등록된 멤버가 없어요.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -225,11 +237,11 @@ const BooksTab = React.memo(({ currentRound, members, setRounds }) => {
   }, [currentRound.id, setRounds]);
 
   return (
-    <div className="space-y-6">
-      <div className="bg-indigo-50 p-4 rounded-xl flex gap-3 items-start border border-indigo-100">
+    <div className="space-y-5">
+      <div className="bg-indigo-50 p-4 rounded-2xl flex gap-4 items-start border border-indigo-100 shadow-sm">
         <AlertCircle className="text-indigo-500 shrink-0 mt-0.5" size={20} />
-        <p className="text-sm text-indigo-800 leading-relaxed">
-          이번 회차에 읽고 싶은 책을 멤버당 <b>최대 4권</b> 등록하세요. 입력된 책은 돌림판 후보가 됩니다.
+        <p className="text-sm text-indigo-900 leading-relaxed font-medium">
+          이번 회차에 읽고 싶은 책을 멤버당 <b>최대 4권</b> 등록하세요.<br/>입력된 책은 돌림판 후보가 됩니다.
         </p>
       </div>
 
@@ -237,18 +249,18 @@ const BooksTab = React.memo(({ currentRound, members, setRounds }) => {
         const memberBooks = currentRound.proposals[member.id] || [];
         return (
           <div key={member.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-50">
-              <span className="text-3xl">{member.avatar}</span>
-              <h3 className="font-bold text-lg text-gray-800">{member.name}의 추천 책</h3>
+            <div className="flex items-center gap-3 mb-5 pb-4 border-b border-gray-100">
+              <span className="text-3xl bg-pink-50 p-2 rounded-xl">{member.avatar}</span>
+              <h3 className="font-extrabold text-lg text-gray-800">{member.name}의 희망 도서</h3>
             </div>
             <div className="space-y-3">
               {[0, 1, 2, 3].map(index => (
                 <div key={index} className="flex items-center gap-3 relative">
-                  <span className="text-gray-300 font-bold w-4 text-right">{index + 1}</span>
+                  <span className="text-gray-400 font-black w-4 text-center text-sm">{index + 1}</span>
                   <input
                     type="text"
-                    placeholder={`추천 도서명 입력 (선택)`}
-                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white transition-all"
+                    placeholder={`도서명 입력 (선택)`}
+                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white transition-all placeholder-gray-400"
                     value={memberBooks[index] || ''}
                     onChange={(e) => updateBook(member.id, index, e.target.value)}
                   />
@@ -263,14 +275,13 @@ const BooksTab = React.memo(({ currentRound, members, setRounds }) => {
 });
 
 // ---------------------------------------------------------
-// 3. 돌림판 탭 (Canvas 최적화)
+// 3. 돌림판 탭
 // ---------------------------------------------------------
 const RouletteTab = React.memo(({ currentRound, setRounds, showToast }) => {
   const canvasRef = useRef(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [resultBook, setResultBook] = useState(null);
 
-  // useMemo로 매 렌더링시 불필요한 배열 생성 방지
   const allProposedBooks = useMemo(() => {
     return Object.values(currentRound?.proposals || {})
       .flat()
@@ -313,7 +324,7 @@ const RouletteTab = React.memo(({ currentRound, setRounds, showToast }) => {
       ctx.closePath();
       ctx.fillStyle = COLORS[i % COLORS.length];
       ctx.fill();
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
       ctx.strokeStyle = '#ffffff';
       ctx.stroke();
 
@@ -322,7 +333,7 @@ const RouletteTab = React.memo(({ currentRound, setRounds, showToast }) => {
       ctx.rotate(angle + sliceAngle / 2);
       ctx.textAlign = 'right';
       ctx.fillStyle = '#1f2937';
-      ctx.font = 'bold 15px Pretendard, sans-serif';
+      ctx.font = 'bold 15px sans-serif';
       
       let displayText = book;
       if (displayText.length > 9) displayText = displayText.substring(0, 8) + '..';
@@ -330,26 +341,28 @@ const RouletteTab = React.memo(({ currentRound, setRounds, showToast }) => {
       ctx.restore();
     });
 
-    // 중앙 핀
     ctx.beginPath();
-    ctx.arc(cx, cy, 18, 0, 2 * Math.PI);
+    ctx.arc(cx, cy, 22, 0, 2 * Math.PI);
     ctx.fillStyle = '#ffffff';
     ctx.fill();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = '#f3f4f6';
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#e5e7eb';
     ctx.stroke();
 
-    // 상단 포인터 마커
     ctx.beginPath();
-    ctx.moveTo(cx, cy - radius + 5);
+    ctx.arc(cx, cy, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = '#d1d5db';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - radius + 10);
     ctx.lineTo(cx - 15, cy - radius - 20);
     ctx.lineTo(cx + 15, cy - radius - 20);
     ctx.closePath();
-    ctx.fillStyle = '#ec4899'; // 핑크색 화살표
+    ctx.fillStyle = '#ec4899'; 
     ctx.fill();
   }, [allProposedBooks]);
 
-  // 도서 목록 변경 시 초기화면 다시 그리기
   useEffect(() => {
     drawWheel();
   }, [drawWheel]);
@@ -364,7 +377,6 @@ const RouletteTab = React.memo(({ currentRound, setRounds, showToast }) => {
     setIsSpinning(true);
     setResultBook(null);
 
-    // 스핀 카운트 즉시 증가
     setRounds(prev => prev.map(r => 
       r.id === currentRound.id ? { ...r, spinCount: r.spinCount + 1 } : r
     ));
@@ -379,7 +391,6 @@ const RouletteTab = React.memo(({ currentRound, setRounds, showToast }) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / spinDuration, 1);
       
-      // cubic bezier ease-out
       const easeProgress = 1 - Math.pow(1 - progress, 4);
       const currentRotation = startRotation + (targetRotation - startRotation) * easeProgress;
 
@@ -397,7 +408,6 @@ const RouletteTab = React.memo(({ currentRound, setRounds, showToast }) => {
         const selected = allProposedBooks[winningIndex];
         setResultBook(selected);
         
-        // 결과 저장
         setRounds(prev => prev.map(r => {
           if (r.id === currentRound.id) {
             return { ...r, selectedBooks: Array.from(new Set([...r.selectedBooks, selected])) };
@@ -413,37 +423,44 @@ const RouletteTab = React.memo(({ currentRound, setRounds, showToast }) => {
 
   return (
     <div className="space-y-6 flex flex-col items-center">
-      <div className="bg-white w-full p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+      <div className="bg-white w-full p-5 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
         <div>
-          <h2 className="font-bold text-gray-800">이번 회차 후보</h2>
-          <p className="text-sm text-gray-500">총 {allProposedBooks.length}권</p>
+          <h2 className="font-extrabold text-gray-800 text-lg">돌림판 후보</h2>
+          <p className="text-sm text-gray-500 font-medium mt-1">총 {allProposedBooks.length}권 대기중</p>
         </div>
-        <div className="text-right">
-          <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">남은 기회</span>
-          <div className="font-black text-2xl text-pink-500 leading-none mt-1">
-            {Math.max(0, 3 - (currentRound?.spinCount || 0))} <span className="text-lg text-gray-300">/ 3</span>
+        <div className="text-right bg-pink-50 py-2 px-4 rounded-xl border border-pink-100">
+          <span className="text-[11px] font-bold text-pink-400 uppercase tracking-widest block mb-0.5">남은 기회</span>
+          <div className="font-black text-2xl text-pink-600 leading-none">
+            {Math.max(0, 3 - (currentRound?.spinCount || 0))} <span className="text-lg text-pink-300">/ 3</span>
           </div>
         </div>
       </div>
 
-      <div className="relative mt-2 w-full max-w-[320px] aspect-square flex justify-center items-center drop-shadow-xl">
-        <canvas ref={canvasRef} width="320" height="320" className="w-full h-auto" />
+      <div className="relative mt-4 w-full max-w-[340px] aspect-square flex justify-center items-center drop-shadow-xl">
+        <canvas ref={canvasRef} width="340" height="340" className="w-full h-auto" />
       </div>
 
       <button
         onClick={spinWheel}
         disabled={isBtnDisabled}
-        className={`w-full py-4 rounded-2xl font-bold text-lg text-white shadow-lg transition-all duration-300 ${
+        className={`w-full py-4 rounded-2xl font-extrabold text-lg flex items-center justify-center gap-2 text-white shadow-xl transition-all duration-300 ${
           isBtnDisabled
-            ? 'bg-gray-300 cursor-not-allowed transform-none shadow-none'
-            : 'bg-gradient-to-r from-pink-500 to-purple-500 hover:scale-[1.02] active:scale-[0.98]'
+            ? 'bg-gray-300 cursor-not-allowed transform-none shadow-none text-gray-500'
+            : 'bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:scale-[1.02] active:scale-[0.98]'
         }`}
       >
-        {isSpinning ? '운명의 책 고르는 중... 🌀' : currentRound?.spinCount >= 3 ? '돌림판 마감 🔒' : '돌림판 돌리기!'}
+        {isSpinning ? (
+          <><Loader2 className="animate-spin" size={20} /> 운명의 책 고르는 중...</>
+        ) : currentRound?.spinCount >= 3 ? (
+          <><Lock size={20} /> 돌림판 마감</>
+        ) : (
+          <><Dices size={20} /> 돌림판 돌리기!</>
+        )}
       </button>
 
       {resultBook && !isSpinning && (
-        <div className="w-full p-6 bg-gradient-to-br from-pink-50 to-purple-50 border border-pink-100 rounded-2xl text-center transform transition-all">
+        <div className="w-full p-6 bg-white border-2 border-pink-200 rounded-2xl text-center transform transition-all shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-400 to-purple-400"></div>
           <span className="inline-block px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-bold mb-3">🎉 당첨 도서</span>
           <h3 className="text-2xl font-black text-gray-800 break-words leading-tight">"{resultBook}"</h3>
           <p className="text-sm text-gray-500 mt-3 font-medium">현황 탭에서 멤버에게 배정해주세요.</p>
@@ -490,7 +507,6 @@ const StatusTab = React.memo(({ currentRound, members, setRounds }) => {
     }));
   }, [currentRound.id, setRounds]);
 
-  // 후보 도서 목록 (추천+당첨) 최적화
   const availableBooks = useMemo(() => {
     return Array.from(new Set([
       ...Object.values(currentRound.proposals).flat(),
@@ -499,29 +515,31 @@ const StatusTab = React.memo(({ currentRound, members, setRounds }) => {
   }, [currentRound.proposals, currentRound.selectedBooks]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-6">
       <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-800">
-          <Calendar size={20} className="text-purple-500" /> 독서 기간
+        <h2 className="text-lg font-extrabold mb-4 flex items-center gap-2 text-gray-800">
+          <CalendarDays className="text-purple-500" size={20} /> 독서 기간 설정
         </h2>
         <div className="flex items-center gap-3">
           <input
             type="date"
-            className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-purple-300"
+            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-purple-300 font-medium text-gray-600"
             value={currentRound.startDate}
             onChange={(e) => updateRoundDate('startDate', e.target.value)}
           />
-          <span className="text-gray-400 font-bold">~</span>
+          <span className="text-gray-400 font-black">~</span>
           <input
             type="date"
-            className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm outline-none focus:ring-2 focus:ring-purple-300"
+            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-purple-300 font-medium text-gray-600"
             value={currentRound.endDate}
             onChange={(e) => updateRoundDate('endDate', e.target.value)}
           />
         </div>
       </div>
 
-      <h2 className="text-lg font-bold mt-8 mb-4 text-gray-800 px-1">📖 멤버별 진행 현황</h2>
+      <h2 className="text-lg font-extrabold mt-8 mb-4 text-gray-800 px-1 flex items-center gap-2">
+        <BarChart2 className="text-pink-500" size={20} /> 멤버별 진행 현황
+      </h2>
       
       <div className="space-y-4">
         {members.map(member => {
@@ -529,46 +547,53 @@ const StatusTab = React.memo(({ currentRound, members, setRounds }) => {
           const isComplete = assignment?.progress === 100;
 
           return (
-            <div key={member.id} className={`bg-white p-5 rounded-2xl shadow-sm border transition-all duration-500 ${isComplete ? 'border-green-400 bg-green-50/50' : 'border-gray-100 hover:border-pink-200'}`}>
+            <div key={member.id} className={`bg-white p-5 rounded-2xl shadow-sm border-2 transition-all duration-500 ${isComplete ? 'border-green-400 bg-green-50/30' : 'border-transparent hover:border-pink-100'}`}>
               <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div className={`text-4xl p-2 rounded-xl ${isComplete ? 'bg-green-100' : 'bg-gray-50'}`}>{member.avatar}</div>
-                    {isComplete && <CheckCircle2 className="absolute -bottom-2 -right-2 text-green-500 bg-white rounded-full shadow-sm" size={24} />}
+                <div className="flex items-center gap-4 w-full">
+                  <div className="relative shrink-0">
+                    <div className={`text-4xl p-2.5 rounded-2xl shadow-sm ${isComplete ? 'bg-green-100' : 'bg-pink-50'}`}>{member.avatar}</div>
+                    {isComplete && (
+                      <div className="absolute -bottom-2 -right-2 text-white bg-green-500 rounded-full w-6 h-6 flex items-center justify-center border-2 border-white shadow-sm">
+                        <CheckCircle2 size={14} />
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <h3 className="font-bold text-gray-800 flex items-center gap-2 text-lg">
-                      {member.name}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-extrabold text-gray-800 flex items-center gap-2 text-lg">
+                      <span className="truncate">{member.name}</span>
                       {assignment && !isComplete && (
-                        <span className="px-2.5 py-1 bg-pink-100 text-pink-700 text-[10px] rounded-full font-bold uppercase tracking-wide">읽는 중</span>
+                        <span className="px-2 py-0.5 bg-pink-100 text-pink-700 text-[10px] rounded-md font-black uppercase tracking-wide shrink-0">읽는중</span>
                       )}
                     </h3>
                     
-                    <select
-                      className="mt-2 bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg py-1.5 px-2 outline-none focus:ring-2 focus:ring-pink-300 w-[160px] truncate"
-                      value={assignment ? assignment.bookTitle : ''}
-                      onChange={(e) => assignBook(member.id, e.target.value)}
-                    >
-                      <option value="">책 배정하기...</option>
-                      {availableBooks.map((book, idx) => (
-                        <option key={idx} value={book}>{book}</option>
-                      ))}
-                    </select>
+                    <div className="mt-2 relative">
+                      <select
+                        className={`w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg py-2 pl-3 pr-8 outline-none focus:ring-2 focus:ring-pink-300 appearance-none cursor-pointer ${isComplete ? 'bg-green-50/50' : ''}`}
+                        value={assignment ? assignment.bookTitle : ''}
+                        onChange={(e) => assignBook(member.id, e.target.value)}
+                      >
+                        <option value="" className="text-gray-400">책 배정하기 (선택)</option>
+                        {availableBooks.map((book, idx) => (
+                          <option key={idx} value={book}>{book}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-3 text-gray-400 pointer-events-none" size={16} />
+                    </div>
                   </div>
+                  
+                  {assignment && (
+                    <div className="flex flex-col items-end shrink-0 ml-2">
+                      <span className={`font-black text-3xl tracking-tighter ${isComplete ? 'text-green-500' : 'text-pink-500'}`}>
+                        {assignment.progress}<span className="text-lg">%</span>
+                      </span>
+                    </div>
+                  )}
                 </div>
-                
-                {assignment && (
-                  <div className="flex flex-col items-end">
-                    <span className={`font-black text-2xl tracking-tighter ${isComplete ? 'text-green-500' : 'text-pink-500'}`}>
-                      {assignment.progress}%
-                    </span>
-                  </div>
-                )}
               </div>
 
-              {/* 진행률 바 */}
+              {/* 진행률 바 (Tailwind 스타일로 교체) */}
               {assignment && (
-                <div className="mt-4">
+                <div className="mt-5 relative pt-1">
                   <input
                     type="range"
                     min="0"
@@ -577,9 +602,9 @@ const StatusTab = React.memo(({ currentRound, members, setRounds }) => {
                     onChange={(e) => updateProgress(member.id, e.target.value)}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-pink-500"
                   />
-                  <div className="w-full bg-gray-100 rounded-full h-2.5 mt-3 overflow-hidden shadow-inner">
+                  <div className="w-full bg-gray-100 rounded-full h-3 mt-2 overflow-hidden shadow-inner relative">
                     <div 
-                      className={`h-full rounded-full transition-all duration-300 ease-out ${isComplete ? 'bg-green-500' : 'bg-gradient-to-r from-pink-400 to-purple-500'}`}
+                      className={`h-full rounded-full transition-all duration-300 ease-out absolute top-0 left-0 ${isComplete ? 'bg-green-500' : 'bg-gradient-to-r from-pink-400 to-purple-500'}`}
                       style={{ width: `${assignment.progress}%` }}
                     />
                   </div>
@@ -588,7 +613,11 @@ const StatusTab = React.memo(({ currentRound, members, setRounds }) => {
             </div>
           );
         })}
-        {members.length === 0 && <p className="text-center text-gray-400 py-4">먼저 멤버를 추가해주세요.</p>}
+        {members.length === 0 && (
+          <div className="text-center text-gray-400 py-10 bg-white rounded-2xl border-2 border-dashed border-gray-200 font-medium">
+            먼저 멤버 탭에서 사람을 추가해주세요.
+          </div>
+        )}
       </div>
     </div>
   );
