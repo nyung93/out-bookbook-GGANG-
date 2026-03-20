@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     <style>
-        body { font-family: 'Pretendard', sans-serif; background-color: #f9fafb; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f8fafc; background-image: radial-gradient(at 0% 0%, hsla(328,100%,94%,1) 0px, transparent 50%), radial-gradient(at 100% 100%, hsla(250,100%,94%,1) 0px, transparent 50%); background-attachment: fixed; }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #ec4899; cursor: pointer; margin-top: -6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
@@ -85,19 +85,42 @@
             <div id="books-list" class="space-y-4"></div>
         </section>
         
-        <!-- 3. 돌림판 탭 -->
+        <!-- 3. 돌림판 탭 (글래스모피즘 & 개인별 룰렛 적용) -->
         <section id="tab-roulette" class="hidden flex flex-col items-center space-y-6">
-            <div class="bg-white w-full p-5 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm">
-                <div class="font-bold text-gray-700">돌림판 후보 <span id="roulette-book-count" class="text-pink-500 ml-1">0</span>권</div>
-                <div class="bg-pink-50 px-3 py-1 rounded-lg text-pink-600 font-black text-sm">남은 기회 <span id="roulette-spin-left">3</span> / 3</div>
+            <!-- 사용자 선택 필즈 -->
+            <div id="roulette-user-selector" class="flex gap-2 overflow-x-auto w-full pb-2 scrollbar-hide px-1"></div>
+
+            <!-- 글래스모피즘 디자인 컨테이너 -->
+            <div class="relative w-full p-6 bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl flex flex-col items-center">
+                <div class="w-full flex justify-between items-center mb-6">
+                    <div class="font-bold text-gray-700">후보 <span id="roulette-book-count" class="text-pink-500 ml-1 font-black">0</span>권</div>
+                    <div class="flex items-center gap-2">
+                        <div class="bg-white/60 px-3 py-1.5 rounded-xl text-pink-600 font-black text-sm shadow-sm border border-white/50">
+                            남은 기회 <span id="roulette-spin-left">3</span>/3
+                        </div>
+                        <button onclick="resetSpin()" class="bg-white/60 hover:bg-white shadow-sm border border-white/50 text-gray-500 p-1.5 rounded-xl transition-all" title="기회 초기화"><i class="fa-solid fa-rotate-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="relative w-full max-w-[300px] aspect-square flex justify-center items-center mb-4">
+                    <!-- 바깥쪽 유리 테두리 -->
+                    <div class="absolute inset-0 rounded-full border-[10px] border-white/40 shadow-[inset_0_2px_10px_rgba(0,0,0,0.05)] pointer-events-none z-10"></div>
+                    <canvas id="roulette-canvas" width="300" height="300" class="w-full h-auto rounded-full drop-shadow-xl"></canvas>
+                    <!-- 중앙 핀 -->
+                    <div class="absolute w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-md z-20 flex justify-center items-center border-4 border-pink-50">
+                        <div class="w-3 h-3 bg-pink-400 rounded-full shadow-inner"></div>
+                    </div>
+                    <!-- 포인터 -->
+                    <div class="absolute -top-3 z-30 text-pink-500 drop-shadow-md" style="font-size: 2rem;"><i class="fa-solid fa-caret-down"></i></div>
+                </div>
+
+                <button id="btn-spin" onclick="spinWheel()" class="w-full py-4 rounded-2xl font-black text-lg text-white bg-gradient-to-br from-pink-400 to-purple-500 shadow-lg shadow-pink-200 active:scale-95 transition-all border border-white/50">돌림판 가즈아!</button>
             </div>
-            <div class="relative w-full max-w-[340px] aspect-square flex justify-center items-center drop-shadow-2xl">
-                <canvas id="roulette-canvas" width="340" height="340" class="w-full h-auto"></canvas>
-            </div>
-            <button id="btn-spin" onclick="spinWheel()" class="w-full py-5 rounded-3xl font-black text-xl text-white bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-600 shadow-xl shadow-pink-200 active:scale-95 transition-all">돌림판 가즈아!</button>
-            <div id="roulette-result" class="hidden w-full p-6 bg-white border-4 border-pink-100 rounded-3xl text-center shadow-xl animate-bounce">
-                <div class="text-pink-500 font-black text-sm mb-1 uppercase tracking-widest">Selected Book</div>
-                <h3 id="result-book-name" class="text-2xl font-black text-gray-800 break-all leading-tight"></h3>
+
+            <div id="roulette-result" class="hidden w-full p-6 bg-white/60 backdrop-blur-lg border border-white/60 rounded-3xl text-center shadow-xl animate-bounce">
+                <div class="text-pink-500 font-black text-xs mb-2 uppercase tracking-widest bg-pink-100/50 inline-block px-3 py-1 rounded-full border border-pink-100">🎉 선택 완료 🎉</div>
+                <h3 id="result-book-name" class="text-2xl font-black text-gray-800 break-all leading-tight mt-1"></h3>
+                <p class="text-xs text-gray-500 mt-3 font-bold"><i class="fa-solid fa-check-circle text-green-400"></i> 현황 탭에 자동 배정되었습니다.</p>
             </div>
         </section>
 
@@ -138,9 +161,10 @@
         window.state = {
             activeTab: 'members',
             members: [],
-            rounds: [{ id: 1, startDate: '', endDate: '', proposals: {}, assignments: {}, spinCount: 0, selectedBooks: [] }],
+            rounds: [{ id: 1, startDate: '', endDate: '', proposals: {}, assignments: {}, spinCounts: {}, selectedBooks: [] }],
             currentRoundId: 1,
             selectedAvatar: '🐰',
+            selectedRouletteMember: null,
             isSpinning: false
         };
 
@@ -231,22 +255,33 @@
             refreshAll();
         }
 
+        window.refreshAll = refreshAll;
         function refreshAll() {
             ensure();
             renderRoundSelector();
             if(window.state.activeTab === 'members') { renderAvatars(); renderMembersList(); }
             else if(window.state.activeTab === 'books') renderBooks();
-            else if(window.state.activeTab === 'roulette') draw();
+            else if(window.state.activeTab === 'roulette') renderRouletteUI();
             else if(window.state.activeTab === 'status') renderStatus();
         }
 
         function ensure() {
             const r = window.state.rounds.find(x => x.id === window.state.currentRoundId) || window.state.rounds[0];
             if(!r.proposals) r.proposals = {}; if(!r.assignments) r.assignments = {};
+            if(!r.spinCounts) r.spinCounts = {};
+            
             window.state.members.forEach(m => {
                 if(!r.proposals[m.id]) r.proposals[m.id] = ['', '', '', ''];
                 if(!r.assignments[m.id]) r.assignments[m.id] = { bookTitle: '', progress: 0 };
+                if(r.spinCounts[m.id] === undefined) r.spinCounts[m.id] = 0;
             });
+
+            // 사용자가 모두 삭제되거나 미선택 시 룰렛 탭 상태 초기화
+            if (!window.state.selectedRouletteMember && window.state.members.length > 0) {
+                window.state.selectedRouletteMember = window.state.members[0].id;
+            } else if (window.state.members.length === 0) {
+                window.state.selectedRouletteMember = null;
+            }
         }
 
         window.showToast = function(m) {
@@ -309,37 +344,107 @@
             }).join('');
         }
 
+        function renderRouletteUI() {
+            const container = document.getElementById('roulette-user-selector');
+            if (window.state.members.length === 0) {
+                container.innerHTML = '<div class="text-sm text-gray-400 font-bold text-center w-full py-2">먼저 멤버를 추가해주세요.</div>';
+                draw(); return;
+            }
+            container.innerHTML = window.state.members.map(m => `
+                <button onclick="window.state.selectedRouletteMember='${m.id}'; refreshAll();" class="flex-shrink-0 px-4 py-2.5 rounded-2xl font-bold transition-all border ${window.state.selectedRouletteMember === m.id ? 'bg-pink-500 text-white border-pink-500 shadow-md shadow-pink-200' : 'bg-white/60 text-gray-500 border-white/60 hover:bg-white'}">
+                    ${m.avatar} ${m.name}
+                </button>
+            `).join('');
+            draw();
+        }
+
+        window.resetSpin = () => {
+            const mId = window.state.selectedRouletteMember;
+            if(!mId) return;
+            const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
+            r.spinCounts[mId] = 0;
+            save(true); refreshAll();
+            showToast("돌림판 횟수가 초기화되었습니다.");
+        }
+
         function draw(rot=0) {
             const c = document.getElementById('roulette-canvas'); if(!c) return;
             const ctx = c.getContext('2d');
             const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
-            let books = []; Object.values(r.proposals).forEach(x=>books.push(...x)); books = books.filter(x=>x.trim());
+            const mId = window.state.selectedRouletteMember;
+
+            const cw = c.width; const ch = c.height;
+            const cx = cw / 2; const cy = ch / 2;
+            const radius = Math.min(cx, cy) - 20;
+
+            ctx.clearRect(0,0,cw,ch);
+
+            if(!mId || !r) {
+                document.getElementById('roulette-book-count').innerText = 0;
+                document.getElementById('roulette-spin-left').innerText = 3;
+                return;
+            }
+
+            let books = r.proposals[mId] ? r.proposals[mId].filter(x=>x.trim()) : [];
+            const spinCount = r.spinCounts[mId] || 0;
+            
             document.getElementById('roulette-book-count').innerText = books.length;
-            document.getElementById('roulette-spin-left').innerText = 3-r.spinCount;
-            ctx.clearRect(0,0,340,340);
-            if(!books.length) { ctx.fillStyle='#f3f4f6'; ctx.beginPath(); ctx.arc(170,170,150,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#9ca3af'; ctx.font='bold 16px Pretendard'; ctx.textAlign='center'; ctx.fillText('책을 등록해주세요', 170, 175); return; }
+            document.getElementById('roulette-spin-left').innerText = Math.max(0, 3 - spinCount);
+            
+            if(!books.length) { 
+                ctx.fillStyle='rgba(243,244,246,0.6)'; ctx.beginPath(); ctx.arc(cx,cy,radius,0,Math.PI*2); ctx.fill(); 
+                ctx.fillStyle='#9ca3af'; ctx.font='bold 16px Pretendard'; ctx.textAlign='center'; ctx.fillText('책을 등록해주세요', cx, cy+5); 
+                return; 
+            }
+            
             const ang = (Math.PI*2)/books.length;
+            // 글래스모피즘용 파스텔톤 반투명 컬러
+            const GLASS_COLORS = ['rgba(255,154,162,0.85)', 'rgba(255,183,178,0.85)', 'rgba(255,218,193,0.85)', 'rgba(226,240,203,0.85)'];
+
             books.forEach((b,i)=>{
-                const a = rot + i*ang; ctx.beginPath(); ctx.moveTo(170,170); ctx.arc(170,170,150,a,a+ang); ctx.fillStyle=COLORS[i%COLORS.length]; ctx.fill(); ctx.lineWidth=3; ctx.strokeStyle='#fff'; ctx.stroke();
-                ctx.save(); ctx.translate(170,170); ctx.rotate(a+ang/2); ctx.textAlign='right'; ctx.fillStyle='#1f2937'; ctx.font='bold 15px Pretendard'; ctx.fillText(b.substring(0,8), 140, 5); ctx.restore();
+                const a = rot + i*ang; 
+                ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,radius,a,a+ang); 
+                ctx.fillStyle = GLASS_COLORS[i%GLASS_COLORS.length]; ctx.fill(); 
+                ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.stroke();
+                
+                ctx.save(); ctx.translate(cx,cy); ctx.rotate(a+ang/2); ctx.textAlign='right'; 
+                ctx.fillStyle='#1f2937'; ctx.font='bold 16px Pretendard'; 
+                ctx.fillText(b.length > 7 ? b.substring(0,6) + '..' : b, radius - 25, 5); ctx.restore();
             });
-            ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.moveTo(170,25); ctx.lineTo(155,5); ctx.lineTo(185,5); ctx.fill();
         }
 
         window.spinWheel = () => {
+            const mId = window.state.selectedRouletteMember;
+            if(!mId) return showToast("멤버를 먼저 추가/선택해주세요.");
             const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
-            let books = []; Object.values(r.proposals).forEach(x=>books.push(...x)); books = books.filter(x=>x.trim());
-            if(window.state.isSpinning || r.spinCount>=3 || !books.length) return;
-            window.state.isSpinning=true; r.spinCount++; save(true);
+            let books = r.proposals[mId] ? r.proposals[mId].filter(x=>x.trim()) : [];
+            const spinCount = r.spinCounts[mId] || 0;
+
+            if(window.state.isSpinning) return;
+            if(spinCount >= 3) return showToast("이 멤버의 기회를 모두 소진했습니다!");
+            if(!books.length) return showToast("등록된 책이 없습니다!");
+
+            window.state.isSpinning=true; 
+            r.spinCounts[mId] = spinCount + 1; 
+            save(true); refreshAll();
+
+            document.getElementById('roulette-result').classList.add('hidden');
+
             let curRot = 0; const target = Math.random()*Math.PI*2 + Math.PI*28; const start = performance.now();
             function ani(time){
-                const prog = Math.min((time-start)/3500, 1); const ease = 1-Math.pow(1-prog,5); curRot = target*ease; draw(curRot);
+                const prog = Math.min((time-start)/3500, 1); const ease = 1-Math.pow(1-prog,4.5); curRot = target*ease; draw(curRot);
                 if(prog<1) requestAnimationFrame(ani);
                 else {
-                    window.state.isSpinning=false; const off = (Math.PI*1.5 - (curRot%(Math.PI*2)) + Math.PI*4)%(Math.PI*2);
+                    window.state.isSpinning=false; 
+                    const off = (Math.PI*1.5 - (curRot%(Math.PI*2)) + Math.PI*4)%(Math.PI*2);
                     const sel = books[Math.floor(off/((Math.PI*2)/books.length))];
-                    if(!r.selectedBooks.includes(sel)) r.selectedBooks.push(sel);
-                    document.getElementById('result-book-name').innerText = sel; document.getElementById('roulette-result').classList.remove('hidden');
+                    
+                    // 현황 탭 자동 연동
+                    r.assignments[mId].bookTitle = sel;
+                    r.assignments[mId].progress = 0;
+                    
+                    document.getElementById('result-book-name').innerText = sel; 
+                    document.getElementById('roulette-result').classList.remove('hidden');
                     save(); refreshAll();
                 }
             }
@@ -348,16 +453,32 @@
 
         window.updateDate = (f,v) => { window.state.rounds.find(x=>x.id===window.state.currentRoundId)[f]=v; save(); }
 
+        window.updateProgUI = (mId, val) => {
+            const textEl = document.getElementById('prog-text-' + mId);
+            const barEl = document.getElementById('prog-bar-' + mId);
+            if(textEl) textEl.innerText = val + '%';
+            if(barEl) barEl.style.width = val + '%';
+        }
+
         function renderStatus() {
             const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
-            let books = []; Object.values(r.proposals).forEach(x=>books.push(...x)); books = [...new Set([...books.filter(x=>x.trim()), ...r.selectedBooks])];
+            
+            // 모든 멤버가 등록한 책 전체 리스트 + 배정 내역 병합 (드롭다운 용)
+            let allBooks = []; 
+            Object.values(r.proposals).forEach(x=>allBooks.push(...x)); 
+
             document.getElementById('date-start').value = r.startDate; document.getElementById('date-end').value = r.endDate;
             document.getElementById('status-list').innerHTML = window.state.members.map(m => {
                 const a = r.assignments[m.id];
                 const isComplete = a.progress == 100;
+
+                // 본인 등록 책을 우선으로 하되, 전체 책 리스트도 제공
+                let memberBooks = r.proposals[m.id] ? r.proposals[m.id].filter(x=>x.trim()) : [];
+                let books = [...new Set([...memberBooks, ...allBooks.filter(x=>x.trim()), a.bookTitle])].filter(b=>b);
+
                 return `
                 <div class="bg-white p-5 rounded-3xl border shadow-sm transition-all duration-500 ${isComplete?'border-green-400 bg-green-50 shadow-green-100':'border-gray-100'}">
-                    <div class="flex justify-between items-center font-black mb-4"><div class="flex items-center gap-3"><span class="text-3xl">${m.avatar}</span> <span class="text-gray-800">${m.name}</span></div><span class="${isComplete?'text-green-600':'text-pink-600'} text-xl tracking-tighter">${a.progress}%</span></div>
+                    <div class="flex justify-between items-center font-black mb-4"><div class="flex items-center gap-3"><span class="text-3xl">${m.avatar}</span> <span class="text-gray-800">${m.name}</span></div><span id="prog-text-${m.id}" class="${isComplete?'text-green-600':'text-pink-600'} text-xl tracking-tighter">${a.progress}%</span></div>
                     <div class="relative mb-4">
                         <select onchange="window.state.rounds.find(x=>x.id===${r.id}).assignments['${m.id}'].bookTitle=this.value;save();refreshAll();" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-3 text-sm font-bold appearance-none outline-none focus:ring-4 focus:ring-pink-100">
                             <option value="">읽을 책을 골라주세요</option>${books.map(b=>`<option value="${b}" ${a.bookTitle===b?'selected':''}>${b}</option>`).join('')}
@@ -366,9 +487,9 @@
                     </div>
                     ${a.bookTitle?`
                     <div class="mt-2">
-                        <input type="range" min="0" max="100" value="${a.progress}" onchange="window.state.rounds.find(x=>x.id===${r.id}).assignments['${m.id}'].progress=Number(this.value);save();refreshAll();" class="w-full accent-pink-500 cursor-pointer">
+                        <input type="range" min="0" max="100" value="${a.progress}" oninput="updateProgUI('${m.id}', this.value)" onchange="window.state.rounds.find(x=>x.id===${r.id}).assignments['${m.id}'].progress=Number(this.value);save();refreshAll();" class="w-full accent-pink-500 cursor-pointer">
                         <div class="h-2 w-full bg-gray-100 rounded-full mt-2 overflow-hidden shadow-inner">
-                            <div class="h-full ${isComplete?'bg-green-500':'bg-gradient-to-r from-pink-400 to-purple-500'} transition-all duration-300" style="width: ${a.progress}%"></div>
+                            <div id="prog-bar-${m.id}" class="h-full ${isComplete?'bg-green-500':'bg-gradient-to-r from-pink-400 to-purple-500'} transition-all duration-300" style="width: ${a.progress}%"></div>
                         </div>
                     </div>`:''}
                 </div>`;
