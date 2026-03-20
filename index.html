@@ -417,7 +417,10 @@
             const spinCount = r.spinCounts[mId] || 0;
 
             if(window.state.isSpinning) return;
-            if(spinCount >= 3) return showToast("이 멤버의 기회를 모두 소진했습니다!");
+            if(spinCount >= 3) {
+                alert("돌림판 횟수가 없습니다.");
+                return;
+            }
             if(!books.length) return showToast("등록된 책이 없습니다!");
 
             window.state.isSpinning=true; 
@@ -435,17 +438,20 @@
                     const off = (Math.PI*1.5 - (curRot%(Math.PI*2)) + Math.PI*4)%(Math.PI*2);
                     const sel = books[Math.floor(off/((Math.PI*2)/books.length))];
                     
-                    // ⭐ 돌림판 결과가 현황 탭(DB)에 완벽 연동/초기화 됨
-                    r.assignments[mId] = r.assignments[mId] || {};
-                    r.assignments[mId].bookTitle = sel;
-                    r.assignments[mId].progress = 0;
-                    r.assignments[mId].currentPage = 0;
-                    r.assignments[mId].totalPages = 0;
+                    // ⭐ [버그 수정] 애니메이션 도중 DB 동기화로 인한 객체 참조 유실을 방지하기 위해
+                    // 최신 라운드 데이터를 다시 조회합니다.
+                    const latestRound = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
+
+                    latestRound.assignments[mId] = latestRound.assignments[mId] || {};
+                    latestRound.assignments[mId].bookTitle = sel;
+                    latestRound.assignments[mId].progress = 0;
+                    latestRound.assignments[mId].currentPage = 0;
+                    latestRound.assignments[mId].totalPages = 0;
                     
                     document.getElementById('result-book-name').innerText = sel; 
                     document.getElementById('roulette-result').classList.remove('hidden');
                     
-                    // 완료 즉시 클라우드에 연동
+                    // 최신화된 객체를 기반으로 클라우드에 연동
                     save().then(() => refreshAll());
                 }
             }
