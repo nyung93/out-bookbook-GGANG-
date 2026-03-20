@@ -462,36 +462,44 @@
 
         function renderStatus() {
             const r = window.state.rounds.find(x=>x.id===window.state.currentRoundId);
-            
-            // 모든 멤버가 등록한 책 전체 리스트 + 배정 내역 병합 (드롭다운 용)
-            let allBooks = []; 
-            Object.values(r.proposals).forEach(x=>allBooks.push(...x)); 
 
             document.getElementById('date-start').value = r.startDate; document.getElementById('date-end').value = r.endDate;
             document.getElementById('status-list').innerHTML = window.state.members.map(m => {
                 const a = r.assignments[m.id];
-                const isComplete = a.progress == 100;
-
-                // 본인 등록 책을 우선으로 하되, 전체 책 리스트도 제공
-                let memberBooks = r.proposals[m.id] ? r.proposals[m.id].filter(x=>x.trim()) : [];
-                let books = [...new Set([...memberBooks, ...allBooks.filter(x=>x.trim()), a.bookTitle])].filter(b=>b);
+                const isComplete = a && a.progress == 100;
+                const bookTitle = a ? a.bookTitle : '';
 
                 return `
                 <div class="bg-white p-5 rounded-3xl border shadow-sm transition-all duration-500 ${isComplete?'border-green-400 bg-green-50 shadow-green-100':'border-gray-100'}">
-                    <div class="flex justify-between items-center font-black mb-4"><div class="flex items-center gap-3"><span class="text-3xl">${m.avatar}</span> <span class="text-gray-800">${m.name}</span></div><span id="prog-text-${m.id}" class="${isComplete?'text-green-600':'text-pink-600'} text-xl tracking-tighter">${a.progress}%</span></div>
-                    <div class="relative mb-4">
-                        <select onchange="window.state.rounds.find(x=>x.id===${r.id}).assignments['${m.id}'].bookTitle=this.value;save();refreshAll();" class="w-full bg-gray-50 border border-gray-100 rounded-2xl p-3 text-sm font-bold appearance-none outline-none focus:ring-4 focus:ring-pink-100">
-                            <option value="">읽을 책을 골라주세요</option>${books.map(b=>`<option value="${b}" ${a.bookTitle===b?'selected':''}>${b}</option>`).join('')}
-                        </select>
-                        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                    <div class="flex justify-between items-center font-black mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-3xl">${m.avatar}</span> 
+                            <span class="text-gray-800">${m.name}</span>
+                        </div>
+                        ${bookTitle ? `<span id="prog-text-${m.id}" class="${isComplete?'text-green-600':'text-pink-600'} text-xl tracking-tighter">${a.progress}%</span>` : ''}
                     </div>
-                    ${a.bookTitle?`
+                    
+                    <div class="relative mb-4">
+                        ${bookTitle ? `
+                            <div class="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 text-sm font-bold flex items-center gap-2 text-gray-700">
+                                <i class="fa-solid fa-book text-pink-400"></i>
+                                <span class="break-all">${bookTitle}</span>
+                            </div>
+                        ` : `
+                            <div class="w-full bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-4 text-sm font-bold flex items-center justify-center gap-2 text-gray-400">
+                                <i class="fa-solid fa-dice"></i>
+                                <span>돌림판에서 책을 뽑아주세요</span>
+                            </div>
+                        `}
+                    </div>
+                    
+                    ${bookTitle ? `
                     <div class="mt-2">
                         <input type="range" min="0" max="100" value="${a.progress}" oninput="updateProgUI('${m.id}', this.value)" onchange="window.state.rounds.find(x=>x.id===${r.id}).assignments['${m.id}'].progress=Number(this.value);save();refreshAll();" class="w-full accent-pink-500 cursor-pointer">
                         <div class="h-2 w-full bg-gray-100 rounded-full mt-2 overflow-hidden shadow-inner">
                             <div id="prog-bar-${m.id}" class="h-full ${isComplete?'bg-green-500':'bg-gradient-to-r from-pink-400 to-purple-500'} transition-all duration-300" style="width: ${a.progress}%"></div>
                         </div>
-                    </div>`:''}
+                    </div>` : ''}
                 </div>`;
             }).join('');
         }
